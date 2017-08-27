@@ -1,0 +1,39 @@
+Function Table_fill_content(arg As String) As Integer
+Dim ArgList
+Dim argListItem
+Dim tempstr
+Dim shtName
+Dim outSheetName
+Dim wsOut
+Dim sheetRange
+Dim fillContent
+
+ArgList = Split(arg, ";")
+
+For Each argListItem In ArgList
+    tempstr = Split(argListItem, ":")
+    Select Case tempstr(0)
+    Case "DataSheetName"
+        shtName = tempstr(1)
+    Case "OutSheetName" ' if OutSheetName is "sameSheet", new column will be added into original sheet
+        outSheetName = tempstr(1)
+    Case "SheetRange"
+        sheetRange = tempstr(1)
+    Case "FillContent"
+        fillContent = tempstr(1)
+    End Select
+Next argListItem
+
+' if OutSheetName is "sameSheet", new row will be added into original sheet
+If outSheetName <> "sameSheet" Then
+    Sheets(shtName).Copy After:=Sheets(shtName)
+    'ActiveWorkbook.Worksheets.Add After:=Worksheets(ActiveWorkbook.Worksheets.Count)
+    ActiveSheet.Name = outSheetName
+    Set wsOut = ActiveSheet
+Else
+    Set wsOut = Worksheets(shtName)
+End If
+
+wsOut.Range(Replace(sheetRange, "#", ":")) = Replace(fillContent, "#", ":")
+
+End Function
