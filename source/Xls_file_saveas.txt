@@ -1,0 +1,30 @@
+Function Xls_file_saveas(arg As String) As Integer
+Dim ArgList
+Dim argListItem
+Dim tempstr
+Dim sourceWorkbook
+Dim wbSource
+Dim saveAsName
+
+
+ArgList = Split(arg, ";")
+
+For Each argListItem In ArgList
+    tempstr = Split(argListItem, ":")
+    Select Case tempstr(0)
+    Case "SourceWorkbook"
+        sourceWorkbook = tempstr(1)
+    Case "SaveAsName"
+        saveAsName = tempstr(1)
+    End Select
+Next argListItem
+
+' if OutSheetName is "sameSheet", new column will be added into original sheet
+If sourceWorkbook = "sameBook" Then
+    Set wbSource = ActiveWorkbook
+Else
+    Set wbSource = Workbooks(sourceWorkbook)
+End If
+
+wbSource.SaveAs Filename:=saveAsName
+End Function
