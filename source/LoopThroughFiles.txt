@@ -1,0 +1,11 @@
+Function LoopThroughFiles(folderStr As String, fileStr As String) As String
+
+Dim MyObj As Object, MySource As Object, file As Variant
+file = Dir(folderStr & "\" & fileStr)
+While (file <> "")
+    LoopThroughFiles = LoopThroughFiles & "," & file
+    file = Dir
+Wend
+LoopThroughFiles = Mid(LoopThroughFiles, 2)
+
+End Function

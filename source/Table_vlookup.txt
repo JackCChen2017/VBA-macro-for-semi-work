@@ -1,0 +1,114 @@
+Function Table_vlookup(arg As String) As Integer
+Dim ArgList
+Dim argListItem
+Dim tempstr
+Dim shtName As String
+Dim SplitBy
+Dim splitColName
+Dim GroupBy
+Dim outSheetName
+Dim sDataSheet
+Dim iColCnt As Integer, iRowCnt
+Dim sSplitBy
+Dim sSplitColumn
+Dim GroupByAry
+Dim j
+Dim iRowCntNew
+Dim iSplitCnt
+Dim nowGroup
+Dim nowSplitBy
+Dim nowValue
+Dim exist_Split
+Dim k
+Dim exist_Group
+Dim SortByHeaderName
+Dim realSortByHeaderName
+Dim DirectSort
+Dim LookUpTableWorkbook
+Dim LookUpTableWorksheet As String
+Dim wsOut, wsLookUp, wbLookUp
+Dim LookupValue As String
+Dim iLUColCnt As Integer
+Dim ReturnColumnName As String
+Dim itrReturnColumnName
+Dim LookupValueList
+Dim ReturnColumnNameList
+Dim iLookupValueCol
+Dim origWB
+Dim iReturnColumnNameCol
+
+ArgList = Split(arg, ";")
+
+For Each argListItem In ArgList
+tempstr = Split(argListItem, ":")
+Select Case tempstr(0)
+Case "DataSheetName"
+    shtName = tempstr(1)
+Case "OutSheetName"
+    outSheetName = tempstr(1)
+Case "LookUpTableWorkbook"
+    LookUpTableWorkbook = tempstr(1)
+Case "LookUpTableWorksheet"
+    LookUpTableWorksheet = tempstr(1)
+Case "LookupValue" ' can be single or multiple, devided by comma
+    LookupValue = tempstr(1)
+Case "ReturnColumnName"
+    ReturnColumnName = tempstr(1) ' wanted column, can be single or multiple, devided by comma
+End Select
+Next argListItem
+
+' if OutSheetName is "sameSheet", new column will be added into original sheet
+If outSheetName <> "sameSheet" Then
+    Sheets(shtName).Copy After:=Sheets(shtName)
+    'ActiveWorkbook.Worksheets.Add After:=Worksheets(ActiveWorkbook.Worksheets.Count)
+    ActiveSheet.Name = outSheetName
+    Set wsOut = ActiveSheet
+Else
+    Set wsOut = Worksheets(shtName)
+End If
+
+iColCnt = wsOut.Cells(1, 1).CurrentRegion.Columns.Count
+iRowCnt = wsOut.Cells(1, 1).CurrentRegion.Rows.Count
+
+LookupValueList = Split(LookupValue, ",")
+ReturnColumnNameList = Split(ReturnColumnName, ",")
+
+'
+If UBound(LookupValueList) = 0 Then
+' Single lookup value
+
+    For Each itrReturnColumnName In ReturnColumnNameList
+        iColCnt = wsOut.Cells(1, 1).CurrentRegion.Columns.Count
+        
+        ' determine lookup table workbook and worksheet
+        If LookUpTableWorkbook = "ActiveWorkbook" Then
+            iLookupValueCol = FindColNumByName(shtName, iColCnt, LookupValue)
+            Set wbLookUp = ActiveWorkbook
+            Set wsLookUp = wbLookUp.Worksheets(LookUpTableWorksheet)
+            iLUColCnt = wsLookUp.Cells(1, 1).CurrentRegion.Columns.Count
+            ' iLookupValueCol = FindColNumByName(shtName, iColCnt, LookupValue) ' LIMITATION: currently lookup value must be first column of lookup table
+            iReturnColumnNameCol = FindColNumByName(LookUpTableWorksheet, iLUColCnt, CStr(itrReturnColumnName))
+            wsOut.Range(Cells(2, iColCnt + 1), Cells(iRowCnt, iColCnt + 1)).Formula = "=Vlookup(" & Chr(64 + iLookupValueCol) & "2," & "'" & LookUpTableWorksheet & "'" & "!$A$1:" & wsLookUp.Cells(1, 1).End(xlDown).End(xlToRight).Address(ReferenceStyle:=xlA1, RowAbsolute:=True, ColumnAbsolute:=True) & "" & "," & CStr(iReturnColumnNameCol) & ",0)"
+
+        Else
+            iLookupValueCol = FindColNumByName(shtName, iColCnt, LookupValue)
+            Set wbLookUp = Workbooks(LookUpTableWorkbook)
+            Set wsLookUp = wbLookUp.Worksheets(LookUpTableWorksheet)
+            iLUColCnt = wsLookUp.Cells(1, 1).CurrentRegion.Columns.Count
+            Set origWB = ActiveWorkbook
+            wbLookUp.Activate
+            iReturnColumnNameCol = FindColNumByName(LookUpTableWorksheet, iLUColCnt, CStr(itrReturnColumnName))
+            origWB.Activate
+            wsOut.Range(Cells(2, iColCnt + 1), Cells(iRowCnt, iColCnt + 1)).Formula = "=Vlookup(" & Chr(64 + iLookupValueCol) & "2," & "'[" & LookUpTableWorkbook & "]" & LookUpTableWorksheet & "'" & "!$A$1:" & wsLookUp.Cells(1, 1).End(xlDown).End(xlToRight).Address(ReferenceStyle:=xlA1, RowAbsolute:=True, ColumnAbsolute:=True) & "" & "," & CStr(iReturnColumnNameCol) & ",0)"
+        End If
+    
+
+        'add looked up value
+        wsOut.Cells(1, iColCnt + 1) = itrReturnColumnName
+    Next itrReturnColumnName
+Else
+' multi lookup value, to be added
+
+End If
+
+End Function

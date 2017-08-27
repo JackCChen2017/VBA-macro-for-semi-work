@@ -1,0 +1,35 @@
+Public Sub Table_Gantt()
+
+Dim iRowCnt
+Dim iColCnt
+Dim first_cell_row
+Dim first_cell_col
+Dim example_string
+Dim prev_cell
+Dim MergeBeginCellRow
+Dim MergeBeginCellCol
+Dim cur_cell
+Dim next_cell
+Dim MergeEndCellRow
+Dim MergeEndCellCol
+Dim start_col
+Dim end_col
+Dim iRow
+Dim iCol
+
+iRowCnt = Selection.Rows.Count
+iColCnt = Selection.Columns.Count
+first_cell_row = Selection.Row
+first_cell_col = Selection.Column
+start_col = fist_cell_col - 2
+end_col = first_cell_col - 1
+
+For iRow = 1 To iRowCnt
+    For iCol = 1 To iColCnt
+        If Cells(1, first_cell_col + iCol - 1) >= Cells(first_cell_row + iRow - 1, start_col) And Cells(1, first_cell_col + iCol - 1) <= Cells(first_cell_row + iRow - 1, end_col) Then
+            Cells(first_cell_row + iRow - 1, first_cell_col + iCol - 1) = 1
+        End If
+    Next iCol
+Next iRow
+
+End Sub

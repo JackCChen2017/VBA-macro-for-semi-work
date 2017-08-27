@@ -1,0 +1,19 @@
+Function Xls_close(arg As String) As Integer
+Dim ArgList
+Dim argListItem
+Dim tempstr
+Dim sFilename
+
+ArgList = Split(arg, ";")
+
+For Each argListItem In ArgList
+    tempstr = Split(argListItem, ":")
+    Select Case tempstr(0)
+    Case "Filename"
+        sFilename = tempstr(1)
+    End Select
+Next argListItem
+
+Workbooks(sFilename).Close
+
+End Function

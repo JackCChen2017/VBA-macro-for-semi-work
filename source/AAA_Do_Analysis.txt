@@ -1,0 +1,81 @@
+Public Sub AAA_Do_Analysis()
+
+Dim iRowCnt
+Dim iColCnt
+Dim first_cell_row
+Dim first_cell_col
+Dim example_string
+Dim prev_cell
+Dim MergeBeginCellRow
+Dim MergeBeginCellCol
+Dim cur_cell
+Dim next_cell
+Dim MergeEndCellRow
+Dim MergeEndCellCol
+Dim start_col
+Dim end_col
+Dim iRow
+Dim iCol
+Dim ana_sheet_name
+Dim ana_range
+Dim ana_function
+Dim ana_function_arg
+Dim func_return
+Dim LRegionName
+Dim iasws 'analysis script worksheet iterator
+
+ana_sheet_name = "Analysis_Script"
+SheetExists (ana_sheet_name)
+
+Set ana_range = Worksheets(ana_sheet_name).Cells(1, 1).CurrentRegion
+
+For iasws = 1 To ana_range.Rows.Count
+ana_function = ana_range.Cells(iasws, 1)
+ana_function_arg = ana_range.Cells(iasws, 2).Text
+Select Case ana_function
+Case "Xls_open"
+    Xls_open (ana_function_arg)
+Case "Xls_close"
+    Xls_close (ana_function_arg)
+Case "Data_connection_remove"
+    Data_connection_remove (ana_function_arg)
+Case "Data_retrieval_csv"
+    data_retrieval_csv (ana_function_arg)
+Case "Data_retrieval_lim"
+    data_retrieval_lim (ana_function_arg)
+Case "Data_retrieval_rpt"
+    data_retrieval_rpt (ana_function_arg)
+Case "Data_retrieval_tst"
+    Data_retrieval_tst (ana_function_arg)
+Case "Data_retrieval_IVcurveTxt"
+    Data_retrieval_IVcurveTxt (ana_function_arg)
+Case "Table_merge"
+    Table_merge (ana_function_arg)
+Case "Table_split"
+    Table_split (ana_function_arg)
+Case "Table_sort"
+    Table_sort (ana_function_arg)
+Case "Table_add_column"
+    Table_add_column (ana_function_arg)
+Case "Table_add_row"
+    Table_add_row (ana_function_arg)
+Case "Table_del_column"
+    Table_del_column (ana_function_arg)
+Case "Table_merge_same"
+    Table_merge_same (ana_function_arg)
+Case "Table_filter_row"
+    Table_filter_row (ana_function_arg)
+Case "Table_vlookup"
+    Table_vlookup (ana_function_arg)
+Case "Chart_scatter"
+    Chart_scatter (ana_function_arg)
+Case "Sheet_remove"
+    Sheet_remove (ana_function_arg)
+Case "Chart_export"
+    'Chart_export (ana_function_arg)
+Case "W"
+    LRegionName = "West"
+End Select
+Next iasws
+
+End Sub

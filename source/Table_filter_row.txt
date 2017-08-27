@@ -1,0 +1,61 @@
+Public Function Table_filter_row(arg As String)
+
+Dim iRowCnt
+Dim iColCnt
+Dim first_cell_row
+Dim first_cell_col
+Dim example_string
+Dim prev_cell
+Dim MergeBeginCellRow
+Dim MergeBeginCellCol
+Dim cur_cell
+Dim next_cell
+Dim MergeEndCellRow
+Dim MergeEndCellCol
+Dim ArgList, argListItem, tempstr, shtName, colName, rowName, selection_range, outSheetName
+Dim iRowCntTotal, iColCntTotal
+Dim i
+Dim criteria
+Dim wsOut
+
+ArgList = Split(arg, ";")
+
+For Each argListItem In ArgList
+tempstr = Split(argListItem, ":")
+Select Case tempstr(0)
+Case "DataSheetName"
+    shtName = tempstr(1)
+Case "OutSheetName"
+    outSheetName = tempstr(1)
+Case "ColName" '
+    colName = tempstr(1)
+Case "Criteria" '
+    criteria = tempstr(1)
+End Select
+Next argListItem
+
+' if OutSheetName is "sameSheet", new column will be added into original sheet
+If outSheetName <> "sameSheet" Then
+    Sheets(shtName).Copy After:=Sheets(shtName)
+    'ActiveWorkbook.Worksheets.Add After:=Worksheets(ActiveWorkbook.Worksheets.Count)
+    ActiveSheet.Name = outSheetName
+    Set wsOut = ActiveSheet
+Else
+    Set wsOut = Worksheets(shtName)
+End If
+
+wsOut.Activate
+iRowCnt = wsOut.Cells(1, 1).CurrentRegion.Rows.Count
+iColCnt = wsOut.Cells(1, 1).CurrentRegion.Columns.Count
+
+For i = 1 To iColCnt
+    If Cells(1, i) = colName Then
+        wsOut.Cells(1, 1).CurrentRegion.AutoFilter field:=i, Criteria1:=criteria, VisibleDropDown:=True
+        wsOut.Cells(1, 1).CurrentRegion.SpecialCells(xlCellTypeVisible, xlCellTypeConstants).Copy Destination:=Cells(iRowCnt + 1, 1)
+        wsOut.Cells(1, 1).CurrentRegion.AutoFilter
+        wsOut.Rows("1:" & iRowCnt).Delete
+        Exit For
+    End If
+Next i
+
+End Function

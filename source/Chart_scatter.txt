@@ -1,0 +1,429 @@
+Function Chart_scatter(arg As String) As Integer
+Dim ArgList
+Dim argListItem
+Dim tempstr
+Dim sDataSheet As String
+Dim Setting_sheet As String
+Dim SeriesByColName
+Dim ChartByColName
+Dim iRowSettingCnt
+Dim iColSettingCnt
+Dim iChartCnt
+Dim iChartActionTypeCol
+Dim iXCol
+Dim iYCol
+Dim iTitleCol
+Dim iAddLineCol
+Dim iRS
+Dim nowTitle
+Dim iRowChartBegin
+Dim FindResult
+Dim r
+Dim iRowChartEnd
+Dim nowChart
+Dim sAppendToChartTitle
+Dim oChart
+Dim iRowSeriesBegin
+Dim iSeriesCnt
+Dim r1
+Dim iRowSeriesEnd
+Dim nowSeries
+Dim aLine As Variant
+Dim SettingWorkbook
+Dim wbDS ' Data sheet workbook
+Dim wsDS ' Data sheet worksheet
+Dim wbST ' Setting sheet workbook
+Dim wsST ' Setting sheet worksheet
+Dim iSTHeaderCnt As Integer
+Dim iSTRowCnt
+Dim iSTChartTypeCol
+Dim iSTChartNameCol
+Dim iSTChartXCol
+Dim iSTChartYCol
+Dim iSTChartTitleCol
+Dim iSTChartSettingCol
+Dim iChartSheetCnt
+Dim itrSTRow
+Dim sChartType
+Dim sChartName
+Dim sChartX
+Dim sChartY
+Dim sChartTitle
+Dim sChartSetting
+Dim wsChartSheet
+Dim ChartSettingList
+Dim XAxisType
+Dim YAxisType
+Dim XMin
+Dim XMax
+Dim YMin
+Dim YMax
+Dim ChartSettingListItem
+Dim ChartXList
+Dim ChartYList
+Dim itrXY
+Dim iChartXCol
+Dim iChartYCol
+Dim iChartByCol
+Dim iSeriesByCol
+Dim iRealXYCnt
+Dim XLabel
+Dim YLabel
+Dim curChartBy
+Dim curSeriesBy
+Dim curChartObject
+Dim x1Row, x1Col, x2Row, x2Col, y1Row, y1Col, y2Row, y2Col
+Dim i
+Dim iSheetNum
+Dim cSer
+Dim iDSHeaderCnt As Integer
+Dim iDSRowCnt
+Dim sChartBy As String
+Dim sSeriesBy As String
+Dim ChartByList
+Dim iChartByColNum
+Dim ChartByFormula
+Dim itrChartBy
+Dim itrChartByColNum
+Dim SeriesByList
+Dim iSeriesByColNum
+Dim SeriesByFormula
+Dim itrSeriesBy
+Dim itrSeriesByColNum
+Dim arrayChartByColNum As Variant
+Dim arraySeriesByColNum As Variant
+
+ArgList = Split(arg, ";")
+
+For Each argListItem In ArgList
+    tempstr = Split(argListItem, ":")
+    Select Case tempstr(0)
+    Case "DataSheetName"
+        sDataSheet = tempstr(1)
+    Case "SettingWorkbook"
+        SettingWorkbook = tempstr(1)
+    Case "SettingSheetName"
+        Setting_sheet = tempstr(1)
+    'Case "SeriesBy"
+    '    SeriesByColName = tempstr(1)
+    'Case "ChartBy"
+    '    ChartByColName = tempstr(1)
+    'Case "OutSheetName"
+        'outSheetName=tempstr(1)
+    End Select
+Next argListItem
+
+Set wbDS = ActiveWorkbook
+Set wsDS = wbDS.Worksheets(sDataSheet)
+If SettingWorkbook = "ActiveWorkbook" Then
+    Set wbST = ActiveWorkbook
+Else
+    Set wbST = Workbooks(SettingWorkbook)
+End If
+Set wsST = wbST.Worksheets(Setting_sheet)
+
+iSTHeaderCnt = wsST.Cells(1, 1).CurrentRegion.Columns.Count
+iSTRowCnt = wsST.Cells(1, 1).CurrentRegion.Rows.Count
+
+iDSHeaderCnt = wsDS.Cells(1, 1).CurrentRegion.Columns.Count
+iDSRowCnt = wsDS.Cells(1, 1).CurrentRegion.Rows.Count
+
+wbST.Activate
+wsST.Activate
+iSTChartTypeCol = FindColNumByName(Setting_sheet, iSTHeaderCnt, "ChartType")
+iSTChartNameCol = FindColNumByName(Setting_sheet, iSTHeaderCnt, "ChartName")
+iSTChartXCol = FindColNumByName(Setting_sheet, iSTHeaderCnt, "ChartX")
+iSTChartYCol = FindColNumByName(Setting_sheet, iSTHeaderCnt, "ChartY")
+iSTChartTitleCol = FindColNumByName(Setting_sheet, iSTHeaderCnt, "ChartTitle")
+iSTChartSettingCol = FindColNumByName(Setting_sheet, iSTHeaderCnt, "ChartSetting")
+iChartCnt = 0
+iChartSheetCnt = 0
+
+For itrSTRow = 2 To iSTRowCnt
+    wbST.Activate
+    wsST.Activate
+    ' get setting row information
+    sChartType = Cells(itrSTRow, iSTChartTypeCol)
+    sChartName = Cells(itrSTRow, iSTChartNameCol)
+    sChartX = Cells(itrSTRow, iSTChartXCol)
+    sChartY = Cells(itrSTRow, iSTChartYCol)
+    sChartTitle = Cells(itrSTRow, iSTChartTitleCol)
+    sChartSetting = Cells(itrSTRow, iSTChartSettingCol)
+    
+    ' add chart sheet
+    wbDS.Activate
+    wsDS.Activate
+    Set wsChartSheet = Worksheets.Add
+    iChartSheetCnt = iChartSheetCnt + 1
+    wsChartSheet.Name = "chart_" & CStr(iChartSheetCnt)
+    
+    ' parse chart setting
+    ChartSettingList = Split(sChartSetting, ";")
+    sChartBy = ""
+    sSeriesBy = ""
+    XAxisType = ""
+    YAxisType = ""
+    XMin = -999
+    YMin = -999
+    XMax = 999
+    YMax = 999
+    XLabel = ""
+    YLabel = ""
+    For Each ChartSettingListItem In ChartSettingList
+        tempstr = Split(ChartSettingListItem, ":")
+        Select Case tempstr(0)
+        Case "ChartBy"
+            sChartBy = tempstr(1)
+        Case "SeriesBy"
+            sSeriesBy = tempstr(1)
+        Case "XAxisType"
+            XAxisType = tempstr(1)
+        Case "YAxisType"
+            YAxisType = tempstr(1)
+        Case "XMin"
+            XMin = tempstr(1)
+        Case "YMin"
+            YMin = tempstr(1)
+        Case "XMax"
+            XMax = tempstr(1)
+        Case "YMax"
+            YMax = tempstr(1)
+        Case "XLabel"
+            XLabel = tempstr(1)
+        Case "YLabel"
+            YLabel = tempstr(1)
+        End Select
+    Next ChartSettingListItem
+    
+    ' Get ChartByColNum
+    If sChartBy <> "" Then
+        iChartByColNum = FindColNumByName(sDataSheet, iDSHeaderCnt, sChartBy)
+    End If
+    
+    ' get SeriesByColNum
+    If sSeriesBy <> "" Then
+        iSeriesByColNum = FindColNumByName(sDataSheet, iDSHeaderCnt, sSeriesBy)
+    End If
+    
+    ' Get arrayChartByColNum,not necessary, should use table_add_column function
+    'If sChartBy <> "" Then
+    '    ChartByList = Split(sChartBy, ",")
+    '    ReDim arrayChartByColNum(UBound(ChartByList))
+    '    iChartByColNum = FindColNumByName(sDataSheet, iDSHeaderCnt, CStr(ChartByList(0)))
+    '    For itrChartBy = 0 To UBound(ChartByList)
+    '        iChartByColNum = FindColNumByName(sDataSheet, iDSHeaderCnt, CStr(ChartByList(itrChartBy)))
+    '        arrayChartByColNum(itrChartBy) = iChartByColNum
+    '    Next itrChartBy
+    'End If
+    
+    ' Get arraySeriesByColNum
+    'If sSeriesBy <> "" Then
+    '    SeriesByList = Split(sSeriesBy, ",")
+    '    ReDim arraySeriesByColNum(UBound(SeriesByList))
+    '    iSeriesByColNum = FindColNumByName(sDataSheet, iDSHeaderCnt, CStr(SeriesByList(0)))
+    '    For itrSeriesBy = 0 To UBound(SeriesByList)
+    '        iSeriesByColNum = FindColNumByName(sDataSheet, iDSHeaderCnt, CStr(SeriesByList(itrSeriesBy)))
+    '        arraySeriesByColNum(itrSeriesBy) = iSeriesByColNum
+    '    Next itrSeriesBy
+    'End If
+    
+    ' copy data from data sheet to chart sheet
+    ChartXList = Split(sChartX, ",")
+    ChartYList = Split(sChartY, ",")
+    If UBound(ChartXList) <> UBound(ChartYList) Then GoTo next_itrSTRow
+    wsChartSheet.Cells(1, 1) = sChartBy
+    wsChartSheet.Cells(1, 2) = sSeriesBy
+    wsChartSheet.Cells(1, 3) = "X"
+    wsChartSheet.Cells(1, 4) = "Y"
+    wsChartSheet.Cells(1, 5) = "Xname"
+    wsChartSheet.Cells(1, 6) = "Yname"
+        
+    iRealXYCnt = 0
+    iChartCnt = 0
+    For itrXY = 0 To UBound(ChartXList) Step 1
+        ' check if X and Y exist
+        iChartXCol = FindColNumByName(sDataSheet, iDSHeaderCnt, CStr(ChartXList(itrXY)))
+        iChartYCol = FindColNumByName(sDataSheet, iDSHeaderCnt, CStr(ChartYList(itrXY)))
+        
+        If (iChartXCol <> 0 Or IsNumeric(ChartXList(itrXY))) And (iChartYCol <> 0 Or IsNumeric(ChartYList(itrXY))) Then
+            iRealXYCnt = iRealXYCnt + 1
+            
+            ' copy ChartBy
+            If sChartBy <> "" Then
+                wsDS.Activate
+                wsDS.Range(Cells(2, iChartByColNum), Cells(iDSRowCnt, iChartByColNum)).Copy Destination:=wsChartSheet.Cells(2 + (iRealXYCnt - 1) * (iDSRowCnt - 1), 1)
+                
+                'wsChartSheet.Activate
+                'wsChartSheet.Range(Cells(2 + (iRealXYCnt - 1) * (iDSRowCnt - 1), 1), Cells(2 + (iRealXYCnt - 1 + 1) * (iDSRowCnt - 1) - 1, 1)).Formula = "=" & _
+                '        sDataSheet & "!" & wsDS.Cells(2, arrayChartByColNum(0)).Address(ReferenceStyle:=xlA1, RowAbsolute:=False, ColumnAbsolute:=True)
+                'For itrChartBy = 1 To UBound(ChartByList)
+                '    wsChartSheet.Range(Cells(2 + (iRealXYCnt - 1) * (iDSRowCnt - 1), 1), Cells(2 + (iRealXYCnt - 1 + 1) * (iDSRowCnt - 1) - 1, 1)).Formula = _
+                '        wsChartSheet.Cells(2 + (iRealXYCnt - 1) * (iDSRowCnt - 1), 2).Formula & _
+                '        "&"",""&" & _
+                '        sDataSheet & "!" & wsDS.Cells(2, arrayChartByColNum(itrChartBy)).Address(ReferenceStyle:=xlA1, RowAbsolute:=False, ColumnAbsolute:=True)
+                'Next itrChartBy
+            End If
+        
+            ' copy SeriesBy
+            If sSeriesBy <> "" Then
+                wsDS.Activate
+                wsDS.Range(Cells(2, iSeriesByColNum), Cells(iDSRowCnt, iSeriesByColNum)).Copy Destination:=wsChartSheet.Cells(2 + (iRealXYCnt - 1) * (iDSRowCnt - 1), 2)
+                
+                'wsChartSheet.Activate
+                'wsChartSheet.Range(Cells(2 + (iRealXYCnt - 1) * (iDSRowCnt - 1), 2), Cells(2 + (iRealXYCnt - 1 + 1) * (iDSRowCnt - 1) - 1, 2)).Formula = "=" & _
+                '        sDataSheet & "!" & wsDS.Cells(2, arraySeriesByColNum(0)).Address(ReferenceStyle:=xlA1, RowAbsolute:=False, ColumnAbsolute:=True)
+                'For itrSeriesBy = 1 To UBound(SeriesByList)
+                '    wsChartSheet.Range(Cells(2 + (iRealXYCnt - 1) * (iDSRowCnt - 1), 2), Cells(2 + (iRealXYCnt - 1 + 1) * (iDSRowCnt - 1) - 1, 2)).Formula = _
+                '        wsChartSheet.Cells(2 + (iRealXYCnt - 1) * (iDSRowCnt - 1), 2).Formula & _
+                '        "&"",""&" & _
+                '        sDataSheet & "!" & wsDS.Cells(2, arraySeriesByColNum(itrSeriesBy)).Address(ReferenceStyle:=xlA1, RowAbsolute:=False, ColumnAbsolute:=True)
+                'Next itrSeriesBy
+            End If
+        
+            ' copy X
+            If iChartXCol <> 0 Then
+                wsDS.Activate
+                wsDS.Range(Cells(2, iChartXCol), Cells(iDSRowCnt, iChartXCol)).Copy Destination:=wsChartSheet.Cells(2 + (iRealXYCnt - 1) * (iDSRowCnt - 1), 3)
+            Else
+                wsChartSheet.Activate
+                wsChartSheet.Range(Cells(2 + (iRealXYCnt - 1) * (iDSRowCnt - 1), 3), Cells(2 + (iRealXYCnt - 1 + 1) * (iDSRowCnt - 1) - 1, 3)) = ChartXList(itrXY)
+            End If
+            ' copy Xname
+            wsChartSheet.Activate
+            wsChartSheet.Range(Cells(2 + (iRealXYCnt - 1) * (iDSRowCnt - 1), 5), Cells(2 + (iRealXYCnt - 1 + 1) * (iDSRowCnt - 1) - 1, 5)) = ChartXList(itrXY)
+            
+            ' copy Y
+            If iChartYCol <> 0 Then
+                wsDS.Activate
+                wsDS.Range(Cells(2, iChartYCol), Cells(iDSRowCnt, iChartYCol)).Copy Destination:=wsChartSheet.Cells(2 + (iRealXYCnt - 1) * (iDSRowCnt - 1), 4)
+            Else
+                wsChartSheet.Activate
+                wsChartSheet.Range(Cells(2 + (iRealXYCnt - 1) * (iDSRowCnt - 1), 4), Cells(2 + (iRealXYCnt - 1 + 1) * (iDSRowCnt - 1) - 1, 4)) = ChartYList(itrXY)
+            End If
+            ' copy Yname
+            wsChartSheet.Activate
+            wsChartSheet.Range(Cells(2 + (iRealXYCnt - 1) * (iDSRowCnt - 1), 6), Cells(2 + (iRealXYCnt - 1 + 1) * (iDSRowCnt - 1) - 1, 6)) = ChartYList(itrXY)
+        End If ' X and Y is valid
+    Next itrXY
+    
+    ' Set Sort
+    If sChartBy <> "" Then
+        If sSeriesBy <> "" Then
+            ' ChartBy,SeriesBy defined: Yes,Yes
+            ' Clear existing sort
+            wsChartSheet.Sort.SortFields.Clear
+            wsChartSheet.Sort.SortFields.Add Key:=Cells(1, 1), SortOn:=xlSortOnValues, Order:=xlAscending, DataOption:=xlSortNormal
+            wsChartSheet.Sort.SortFields.Add Key:=Cells(1, 2), SortOn:=xlSortOnValues, Order:=xlAscending, DataOption:=xlSortNormal
+        Else
+            ' ChartBy,SeriesBy defined: Yes,No
+            wsChartSheet.Sort.SortFields.Clear
+            wsChartSheet.Sort.SortFields.Add Key:=Cells(1, 1), SortOn:=xlSortOnValues, Order:=xlAscending, DataOption:=xlSortNormal
+        End If
+    Else
+        If sSeriesBy <> "" Then
+            ' ChartBy,SeriesBy defined: No,Yes
+            ' Clear existing sort
+            wsChartSheet.Sort.SortFields.Clear
+            wsChartSheet.Sort.SortFields.Add Key:=Cells(1, 2), SortOn:=xlSortOnValues, Order:=xlAscending, DataOption:=xlSortNormal
+        Else
+            ' ChartBy,SeriesBy defined: No,No
+            wsChartSheet.Sort.SortFields.Clear
+        End If
+    End If
+    'Do the sort
+    wsChartSheet.Activate
+    With wsChartSheet.Sort
+        .SetRange Cells(1, 3).CurrentRegion
+        .Header = xlYes
+        .MatchCase = False
+        .Orientation = xlTopToBottom
+        .SortMethod = xlPinYin
+        .Apply
+    End With
+    
+    ' Add Chart
+    curChartBy = Cells(2, 1)
+    curSeriesBy = Cells(2, 2)
+    iChartCnt = wsChartSheet.ChartObjects.Count
+    Set curChartObject = wsChartSheet.ChartObjects.Add(300, 100 + iChartCnt * 300, 300, 300) ' left, top, width, height
+    curChartObject.Chart.ChartType = xlXYScatter
+    curChartObject.Chart.HasTitle = True
+    curChartObject.Chart.ChartTitle.Characters.Text = curChartBy
+
+    x1Row = 2
+    y1Row = 2
+    x1Col = 3
+    y1Col = 4
+    For i = 3 To Cells(1, 3).CurrentRegion.Rows.Count
+        If Cells(i, 1) <> curChartBy Then
+            ' new chartBy
+            ' add last series of previous chart
+            x2Row = i - 1
+            y2Row = i - 1
+            x2Col = 3
+            y2Col = 4
+            Set cSer = curChartObject.Chart.SeriesCollection.NewSeries
+            cSer.XValues = "=" & wsChartSheet.Name & "!" & wsChartSheet.Cells(x1Row, x1Col).Address(ReferenceStyle:=xlR1C1, RowAbsolute:=True, ColumnAbsolute:=True) & ":" & wsChartSheet.Cells(x2Row, x2Col).Address(ReferenceStyle:=xlR1C1, RowAbsolute:=True, ColumnAbsolute:=True)
+            cSer.Values = "=" & wsChartSheet.Name & "!" & wsChartSheet.Cells(y1Row, y1Col).Address(ReferenceStyle:=xlR1C1, RowAbsolute:=True, ColumnAbsolute:=True) & ":" & wsChartSheet.Cells(y2Row, y2Col).Address(ReferenceStyle:=xlR1C1, RowAbsolute:=True, ColumnAbsolute:=True)
+            cSer.Name = Cells(i - 1, 2)
+            curChartObject.Chart.Axes(xlCategory, xlPrimary).HasTitle = True
+            curChartObject.Chart.Axes(xlCategory, xlPrimary).AxisTitle.Caption = XLabel
+            curChartObject.Chart.Axes(xlValue, xlPrimary).HasTitle = True
+            curChartObject.Chart.Axes(xlValue, xlPrimary).AxisTitle.Caption = YLabel
+            
+            ' set new Chart and series start location
+            x1Row = i
+            y1Row = i
+            x1Col = 3
+            y1Col = 4
+            curChartBy = Cells(i, 1)
+            curSeriesBy = Cells(i, 2)
+            
+            ' add need chart
+            iChartCnt = wsChartSheet.ChartObjects.Count
+            Set curChartObject = wsChartSheet.ChartObjects.Add(300, 100 + iChartCnt * 300, 300, 300) ' left, top, width, height
+            curChartObject.Chart.ChartType = xlXYScatter
+            curChartObject.Chart.HasTitle = True
+            curChartObject.Chart.ChartTitle.Characters.Text = curChartBy
+        Else
+            ' not new chart, only new series
+            If Cells(i, 2) <> curSeriesBy Then
+                ' new seriesBy
+                ' add last series to current chart
+                x2Row = i - 1
+                y2Row = i - 1
+                x2Col = 3
+                y2Col = 4
+                Set cSer = curChartObject.Chart.SeriesCollection.NewSeries
+                cSer.XValues = "=" & wsChartSheet.Name & "!" & wsChartSheet.Cells(x1Row, x1Col).Address(ReferenceStyle:=xlR1C1, RowAbsolute:=True, ColumnAbsolute:=True) & ":" & wsChartSheet.Cells(x2Row, x2Col).Address(ReferenceStyle:=xlR1C1, RowAbsolute:=True, ColumnAbsolute:=True)
+                cSer.Values = "=" & wsChartSheet.Name & "!" & wsChartSheet.Cells(y1Row, y1Col).Address(ReferenceStyle:=xlR1C1, RowAbsolute:=True, ColumnAbsolute:=True) & ":" & wsChartSheet.Cells(y2Row, y2Col).Address(ReferenceStyle:=xlR1C1, RowAbsolute:=True, ColumnAbsolute:=True)
+                cSer.Name = Cells(i - 1, 2)
+            
+                ' set new series start location
+                x1Row = i
+                y1Row = i
+                x1Col = 3
+                y1Col = 4
+                curSeriesBy = Cells(i, 2)
+            End If
+        End If
+    Next i
+    ' handle last series
+    x2Row = i - 1
+    y2Row = i - 1
+    x2Col = 3
+    y2Col = 4
+    Set cSer = curChartObject.Chart.SeriesCollection.NewSeries
+    cSer.XValues = "=" & wsChartSheet.Name & "!" & wsChartSheet.Cells(x1Row, x1Col).Address(ReferenceStyle:=xlR1C1, RowAbsolute:=True, ColumnAbsolute:=True) & ":" & wsChartSheet.Cells(x2Row, x2Col).Address(ReferenceStyle:=xlR1C1, RowAbsolute:=True, ColumnAbsolute:=True)
+    cSer.Values = "=" & wsChartSheet.Name & "!" & wsChartSheet.Cells(y1Row, y1Col).Address(ReferenceStyle:=xlR1C1, RowAbsolute:=True, ColumnAbsolute:=True) & ":" & wsChartSheet.Cells(y2Row, y2Col).Address(ReferenceStyle:=xlR1C1, RowAbsolute:=True, ColumnAbsolute:=True)
+    cSer.Name = Cells(i - 1, 2)
+    curChartObject.Chart.Axes(xlCategory, xlPrimary).HasTitle = True
+    curChartObject.Chart.Axes(xlCategory, xlPrimary).AxisTitle.Caption = XLabel
+    curChartObject.Chart.Axes(xlValue, xlPrimary).HasTitle = True
+    curChartObject.Chart.Axes(xlValue, xlPrimary).AxisTitle.Caption = YLabel
+    
+next_itrSTRow:
+Next itrSTRow
+
+
+End Function

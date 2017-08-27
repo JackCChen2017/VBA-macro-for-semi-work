@@ -1,0 +1,75 @@
+Function data_retrieval_csv(arg As String) As Integer
+
+Dim strFile As String
+Dim MyData As String, strData() As String
+Dim FinalArray() As String
+Dim StartTime As String, endTime As String
+Dim n As Long, j As Long, i As Long
+Dim ArgList, argListItem, tempstr, fileListStr, filterStr, fileList, fileListItem
+Dim MyDir
+Dim cn, strcon, strSQL, rs
+Dim lastRow
+Dim resultSheetName
+Dim strSQLSELECT, strSQLWHERE
+Dim iCols
+
+resultSheetName = "SQLresult"
+MyDir = ActiveWorkbook.Path
+Set cn = CreateObject("ADODB.Connection")
+Set rs = CreateObject("ADODB.RECORDSET")
+
+StartTime = now
+ArgList = Split(arg, ";")
+
+For Each argListItem In ArgList
+    tempstr = Split(argListItem, ":")
+    Select Case tempstr(0)
+    Case "FileList"
+        fileListStr = tempstr(1)
+    Case "SQLSELECT"
+        strSQLSELECT = tempstr(1)
+    Case "SQLWhere"
+        strSQLWHERE = tempstr(1)
+    Case "OutputSheet"
+        resultSheetName = tempstr(1)
+    End Select
+
+Next argListItem
+
+SheetExists (resultSheetName)
+
+fileList = Split(fileListStr, ",")
+lastRow = 1
+For Each fileListItem In fileList
+    strFile = MyDir & "" & fileListItem
+
+    strcon = "Provider = Microsoft.Jet.OLEDB.4.0;Data Source=" & MyDir & ";" & "Extended Properties=""text;HDR=Yes;FMT=Delimited"";"
+    cn.Open strcon
+
+    'strSQL = "SELECT LOT,WAFER,PARAMETER INTO New.csv FROM " & fileListItem & " WHERE LOT = 'A1234'"
+    strSQL = "SELECT " & strSQLSELECT & " FROM " & fileListItem & " Where " & strSQLWHERE
+
+    rs.activeconnection = cn
+    rs.Open strSQL
+    If lastRow = 1 Then
+        For iCols = 0 To rs.Fields.Count - 1
+            Worksheets(resultSheetName).Cells(1, iCols + 1).Value = rs.Fields(iCols).Name
+        Next
+        lastRow = 2
+    End If
+    Worksheets(resultSheetName).Cells(lastRow, 1).CopyFromRecordset rs
+    lastRow = Worksheets(resultSheetName).Cells(1, 1).CurrentRegion.Rows.Count + 1
+    'cn.Execute strSQL
+    rs.Close
+    cn.Close
+
+Next fileListItem
+Set cn = Nothing
+
+endTime = now
+Debug.Print "Process started at:" & StartTime
+Debug.Print "Process ended at:" & endTime
+
+data_retrieval_csv = 0 ' return 0 if successful
+
+End Function

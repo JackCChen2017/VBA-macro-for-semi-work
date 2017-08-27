@@ -1,0 +1,101 @@
+Function Table_add_column(arg As String) As Integer
+Dim ArgList
+Dim argListItem
+Dim tempstr
+Dim shtName
+Dim outSheetName
+Dim SplitBy
+Dim splitColName
+Dim GroupBy
+Dim sDataSheet
+Dim iColCnt As Integer, iRowCnt As Integer
+Dim sSplitBy
+Dim sSplitColumn
+Dim GroupByAry
+Dim j
+Dim iRowCntNew
+Dim iSplitCnt
+Dim nowGroup
+Dim nowSplitBy
+Dim nowValue
+Dim exist_Split
+Dim k
+Dim exist_Group
+Dim SortByHeaderName
+Dim realSortByHeaderName
+Dim DirectSort
+Dim LookUpTableWorkbook
+Dim LookUpTableWorksheet
+Dim wsOut, wsLookUp, wbLookUp
+Dim WantedHeaderName
+Dim WantedHeaderNameList
+Dim i
+Dim iLastRow
+Dim itrWS ' iteration of worksheets
+Dim iRow
+Dim iCol
+Dim curCol
+Dim newColName
+Dim newColFormula
+Dim curFormulaStr
+Dim FormulaStr
+Dim arrayColFormula
+
+ArgList = Split(arg, ";")
+
+For Each argListItem In ArgList
+tempstr = Split(argListItem, ":")
+Select Case tempstr(0)
+Case "DataSheetName"
+    shtName = tempstr(1)
+Case "OutSheetName" ' if OutSheetName is "sameSheet", new column will be added into original sheet
+    outSheetName = tempstr(1)
+Case "NewColName"
+    newColName = tempstr(1)
+Case "NewColFormula"
+    newColFormula = tempstr(1)
+End Select
+Next argListItem
+
+' if OutSheetName is "sameSheet", new column will be added into original sheet
+If outSheetName <> "sameSheet" Then
+    Sheets(shtName).Copy After:=Sheets(shtName)
+    'ActiveWorkbook.Worksheets.Add After:=Worksheets(ActiveWorkbook.Worksheets.Count)
+    ActiveSheet.Name = outSheetName
+    Set wsOut = ActiveSheet
+Else
+    Set wsOut = Worksheets(shtName)
+End If
+
+iColCnt = wsOut.Cells(1, 1).CurrentRegion.Columns.Count
+iRowCnt = wsOut.Cells(1, 1).CurrentRegion.Rows.Count
+
+wsOut.Cells(1, iColCnt + 1) = newColName
+
+arrayColFormula = Split(newColFormula, ",")
+For i = 0 To UBound(arrayColFormula)
+    If IsNumeric(arrayColFormula(i)) Then
+        curFormulaStr = CStr(arrayColFormula(i))
+    ElseIf Left(arrayColFormula(i), 2) = "OP" Then
+        curFormulaStr = CStr(Right(arrayColFormula(i), 1))
+    Else
+        curFormulaStr = wsOut.Cells(2, FindColNumByName(wsOut.Name, iColCnt, CStr(arrayColFormula(i)))).Address(ReferenceStyle:=xlA1, RowAbsolute:=False, ColumnAbsolute:=True)
+    End If
+    FormulaStr = FormulaStr & curFormulaStr
+Next i
+wsOut.Range(Cells(2, iColCnt + 1), Cells(iRowCnt, iColCnt + 1)).Formula = "=" & FormulaStr
+
+wsOut.Activate
+
+'copy value
+    wsOut.Cells.Copy
+    wsOut.Cells.PasteSpecial Paste:=xlPasteValues, Operation:=xlNone, skipblanks:=False, Transpose:=False
+    wsOut.Cells(1, 1).Select
+    
+    
+'set all cells format
+Cells.Select
+Selection.Columns.AutoFit
+Range("A1").Select
+
+End Function

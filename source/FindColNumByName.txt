@@ -1,0 +1,20 @@
+Function FindColNumByName(sDataSheet As String, iHeaderCnt As Integer, sName As String) As Integer
+Dim FindResult
+FindColNumByName = 0
+'this is working but may not be efficient
+'For i = 1 To iHeaderCnt
+'   If Worksheets(sDataSheet).Cells(1, i) = sName Then
+'       FindColNumByName = i
+'       Exit For
+'   End If
+'Next i
+
+'another method
+Set FindResult = Worksheets(sDataSheet).Range("A1:" & Cells(1, iHeaderCnt).Address(ReferenceStyle:=xlA1, RowAbsolute:=True, ColumnAbsolute:=True)).Find(What:=sName, LookIn:=xlFormulas, LookAt:=xlWhole, SearchOrder:=xlByRows, SearchDirection:=xlNext, MatchCase:=True, MatchByte:=False, SearchFormat:=False)
+If FindResult Is Nothing Then
+
+Else
+FindColNumByName = FindResult.Column
+End If
+
+End Function

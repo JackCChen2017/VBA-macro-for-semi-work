@@ -1,0 +1,127 @@
+Function Data_retrieval_tst(arg As String) As Integer
+Dim ArgList
+Dim argListItem
+Dim tempstr
+Dim shtName
+Dim SplitBy
+Dim splitColName
+Dim GroupBy
+Dim outSheetName
+Dim sDataSheet
+Dim iColCnt, iRowCnt
+Dim sSplitBy
+Dim sSplitColumn
+Dim GroupByAry
+Dim j
+Dim iRowCntNew
+Dim iSplitCnt
+Dim nowGroup
+Dim nowSplitBy
+Dim nowValue
+Dim exist_Split
+Dim k
+Dim exist_Group
+Dim SortByHeaderName
+Dim realSortByHeaderName
+Dim DirectSort
+Dim LookUpTableWorkbook
+Dim LookUpTableWorksheet
+Dim wsOut, wsLookUp, wbLookUp
+Dim sFilepath
+Dim sFilename
+Dim origWB
+Dim origDrive
+Dim origFilepath
+Dim sTstFileListStr
+Dim TstFileList
+Dim sTstFile
+Dim lastRow
+Dim i
+Dim iRow
+Dim curTK
+
+
+ArgList = Split(arg, ";")
+
+For Each argListItem In ArgList
+tempstr = Split(argListItem, "#") ' use '#' due to drive has ':', other functions will still use ':'
+Select Case tempstr(0)
+Case "Filepath"
+    sFilepath = tempstr(1)
+Case "Filename"
+    sFilename = tempstr(1)
+End Select
+Next argListItem
+
+sTstFileListStr = LoopThroughFiles(CStr(sFilepath), "*tst")
+TstFileList = Split(sTstFileListStr, ",")
+
+Set origWB = ActiveWorkbook
+'origDrive = Application.ActiveWorkbook.Path
+'origFilepath = Application.ActiveWorkbook.Path
+
+i = 0
+For Each sTstFile In TstFileList
+    i = i + 1
+    origWB.Activate
+    origWB.Worksheets.Add After:=origWB.Worksheets(origWB.Worksheets.Count)
+    ActiveSheet.Name = "tst" & CStr(i)
+    Set wsOut = ActiveSheet
+    
+    Workbooks.OpenText _
+        Filename:=sFilepath & "" & sTstFile, _
+        Origin:=1257, _
+        StartRow:=1, _
+        DataType:=xlDelimited, _
+        TextQualifier:=xlDoubleQuote, _
+        ConsecutiveDelimiter:=True, _
+        Tab:=False, _
+        Semicolon:=False, _
+        Comma:=False, _
+        Space:=True, _
+        Other:=False, _
+        OtherChar:="#", _
+        FieldInfo:=Array(Array(1, 1), Array(2, 1), Array(3, 1), Array(4, 1), Array(5, 1)), _
+        TrailingMinusNumbers:=True
+    lastRow = Cells(10, 1).End(xlDown).Row
+    ActiveWorkbook.Sheets(1).Range(Cells(12, 2), Cells(lastRow - 1, 6)).Copy Destination:=wsOut.Cells(2, 2)
+    Workbooks(sTstFile).Close
+    
+    origWB.Activate
+    wsOut.Cells(1, 1) = "WAT_TEST_PROGRAM"
+    wsOut.Cells(1, 2) = "TK_Parameter"
+    wsOut.Cells(1, 3) = "Algorithm"
+    wsOut.Cells(1, 4) = "Test_condition"
+    wsOut.Cells(1, 5) = "OutputP"
+    wsOut.Cells(1, 6) = "Pin_assignment"
+    
+    ' handle test program column
+    wsOut.Range(Cells(1 + 1, 1), Cells(lastRow - 12 + 1, 1)) = sTstFile
+    
+    ' add Parameter column
+    lastRow = wsOut.Cells(1, 1).CurrentRegion.Rows.Count
+    wsOut.Columns("B:B").Insert
+    wsOut.Cells(1, 2) = "Parameter"
+    wsOut.Range(Cells(2, 2), Cells(lastRow, 2)).Formula = "=substitute(substitute(C2,"":"",""""),""`"","""")"
+    
+    ' handle test key column
+    wsOut.Columns("B:B").Insert
+    wsOut.Cells(1, 2) = "Testkey"
+    For iRow = 2 To lastRow
+        If Right(Cells(iRow, 4), 2) = "::" Then
+            curTK = Cells(iRow, 3)
+        End If
+        Cells(iRow, 2) = curTK
+    Next iRow
+    
+    'copy value
+    wsOut.Cells.Copy
+    wsOut.Cells.PasteSpecial Paste:=xlPasteValues, Operation:=xlNone, skipblanks:=False, Transpose:=False
+    wsOut.Cells(1, 1).Select
+    
+    ' autofit
+    wsOut.Columns("A:D").AutoFit
+    wsOut.Columns("F:G").AutoFit
+Next sTstFile
+
+End Function

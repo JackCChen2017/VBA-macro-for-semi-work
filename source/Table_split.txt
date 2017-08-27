@@ -1,0 +1,179 @@
+Function Table_split(arg As String) As Integer
+Dim ArgList
+Dim argListItem
+Dim tempstr
+Dim shtName
+Dim SplitBy
+Dim splitColName
+Dim GroupBy
+Dim outSheetName
+Dim sDataSheet
+Dim iColCnt, iRowCnt
+Dim sSplitBy
+Dim sSplitColumn
+Dim GroupByAry
+Dim j
+Dim iRowCntNew
+Dim iSplitCnt
+Dim nowGroup
+Dim nowSplitBy
+Dim nowValue
+Dim exist_Split
+Dim k
+Dim exist_Group
+Dim i
+Dim wsOut
+
+ArgList = Split(arg, ";")
+
+For Each argListItem In ArgList
+    tempstr = Split(argListItem, ":")
+    Select Case tempstr(0)
+    Case "DataSheetName"
+        shtName = tempstr(1)
+    Case "SplitBy"
+        SplitBy = tempstr(1)
+    Case "SplitColName"
+        splitColName = tempstr(1)
+    Case "GroupBy"
+        GroupBy = tempstr(1)
+    Case "OutSheetName"
+        outSheetName = tempstr(1)
+    End Select
+Next argListItem
+
+sDataSheet = shtName
+Sheets(sDataSheet).Select
+Sheets(sDataSheet).Copy After:=Sheets(sDataSheet)
+
+ActiveSheet.Name = outSheetName
+Set wsOut = ActiveSheet
+
+iColCnt = Sheets(outSheetName).Cells(1, 1).CurrentRegion.Columns.Count
+iRowCnt = Sheets(outSheetName).Cells(1, 1).CurrentRegion.Rows.Count
+
+sSplitBy = SplitBy
+sSplitColumn = splitColName
+GroupByAry = Split(GroupBy, ",")
+
+'copy SplitBy Column
+For i = 1 To iColCnt
+    If CStr(Sheets(outSheetName).Cells(1, i)) = sSplitBy Then
+        Sheets(outSheetName).Columns(i).Copy Destination:=Sheets(outSheetName).Cells(1, iColCnt + 2)
+        Exit For
+    End If
+Next i
+
+'copy SplitColumn Column
+For i = 1 To iColCnt
+    If CStr(Sheets(outSheetName).Cells(1, i)) = sSplitColumn Then
+        Sheets(outSheetName).Columns(i).Copy Destination:=Sheets(outSheetName).Cells(1, iColCnt + 3)
+        Exit For
+    End If
+Next i
+
+'Handle GroupColumn
+'1st GroupColumn Component
+Range(Cells(1, iColCnt + 1), Cells(iRowCnt, iColCnt)).Formula = "=" & Cells(1, FindColNumByName(CStr(wsOut.Name), CInt(iColCnt), CStr(GroupByAry(0)))).Address(ReferenceStyle:=xlA1, RowAbsolute:=False, ColumnAbsolute:=True)
+
+' If GroupColumn Component >1, Concatinate them, will split them again at last
+If UBound(GroupByAry) > 0 Then
+    For j = 1 To UBound(GroupByAry)
+        'if meet application-defined or object-defined error, check analysis script, groupBy may be wrong
+        Range(Cells(1, iColCnt + 1), Cells(iRowCnt, iColCnt + 1)).Formula = CStr(Cells(1, iColCnt + 1).Formula) & "&""#""&" & Cells(1, FindColNumByName(CStr(wsOut.Name), CInt(iColCnt), CStr(GroupByAry(j)))).Address(ReferenceStyle:=xlA1, RowAbsolute:=False, ColumnAbsolute:=True)
+    Next j
+End If
+
+' copy formula to value for concatinated column
+Sheets(outSheetName).Cells.Copy
+Sheets(outSheetName).Cells.PasteSpecial Paste:=xlPasteValues, Operation:=xlNone, skipblanks:=False, Transpose:=False
+
+'Delete All columns to leave only GroupBy,SplitBy,SplitColumn
+Sheets(outSheetName).Range(Columns(1), Columns(iColCnt)).Delete
+
+'Sort by SplitBy, Then GroupBy
+Range("A1").Select
+Sheets(outSheetName).Sort.SortFields.Clear
+Sheets(outSheetName).Sort.SortFields.Add Key:=Range("B:B"), SortOn:=xlSortOnValues, Order:=xlAscending, DataOption:=xlSortNormal
+Sheets(outSheetName).Sort.SortFields.Add Key:=Range("A:A"), SortOn:=xlSortOnValues, Order:=xlAscending, DataOption:=xlSortNormal
+With Sheets(outSheetName).Sort
+    .SetRange Range("A:C")
+    .Header = xlYes
+    .MatchCase = False
+    .Orientation = xlTopToBottom
+    .SortMethod = xlPinYin
+    .Apply
+End With
+Sheets(outSheetName).Sort.SortFields.Clear
+
+'Start to split
+iRowCntNew = Sheets(outSheetName).Cells(1, 1).CurrentRegion.Rows.Count
+
+Sheets(outSheetName).Cells(1, 4) = CStr(Sheets(outSheetName).Cells(1, 1))
+Sheets(outSheetName).Cells(2, 4) = CStr(Sheets(outSheetName).Cells(2, 1))
+Sheets(outSheetName).Cells(1, 5) = CStr(Sheets(outSheetName).Cells(2, 2))
+Sheets(outSheetName).Cells(2, 5) = Sheets(outSheetName).Cells(2, 3)
+
+iSplitCnt = 1
+For i = 3 To iRowCntNew
+    nowGroup = CStr(Sheets(outSheetName).Cells(i, 1))
+    nowSplitBy = CStr(Sheets(outSheetName).Cells(i, 2))
+    nowValue = Sheets(outSheetName).Cells(i, 3)
+
+    ' decide j, split column number
+
+    exist_Split = 0
+    For j = 5 To iSplitCnt + 4
+
+        If CStr(Sheets(outSheetName).Cells(1, j)) = nowSplitBy Then
+            exist_Split = 1
+            Exit For
+        End If
+    Next j
+
+    If exist_Split = 0 Then
+        iSplitCnt = iSplitCnt + 1
+        Sheets(outSheetName).Cells(1, j) = nowSplitBy
+    End If
+
+    ' decide k, Group row number
+    k = 2
+    exist_Group = 0
+    While Sheets(outSheetName).Cells(k, 4) <> "" And exist_Group = 0
+        If Sheets(outSheetName).Cells(k, 4) = nowGroup Then
+            exist_Group = 1
+            k = k - 1
+        End If
+        k = k + 1
+    Wend
+
+    If exist_Group = 0 Then
+        Sheets(outSheetName).Cells(k, 4) = nowGroup
+    End If
+
+    'fill Value
+    Sheets(outSheetName).Cells(k, j) = nowValue
+
+Next i 'i=3 to iRowCntNew
+
+'split done, do clean up
+
+'Delete Column 1,2,3
+Sheets(outSheetName).Range(Columns(1), Columns(3)).Delete
+
+'split multiple GroupBy
+If UBound(GroupByAry) > 0 Then
+    Sheets(outSheetName).Range(Columns(2), Columns(UBound(GroupByAry) + 1)).Insert
+
+    Sheets(outSheetName).Columns("A:A").Select
+    Selection.TextToColumns Destination:=Range("A1"), DataType:=xlDelimited, TextQualifier:=xlDoubleQuote, ConsecutiveDelimiter:=False, Tab:=False, Semicolon:=False, Comma:=False, Space:=False, Other:=True, OtherChar:="#", TrailingMinusNumbers:=True
+End If
+'recover screen update
+Application.ScreenUpdating = True
+
+'set all cells format
+Cells.Select
+Selection.Columns.AutoFit
+Range("A1").Select
+
+End Function

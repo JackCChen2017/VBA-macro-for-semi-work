@@ -1,0 +1,100 @@
+Function Table_sort(arg As String) As Integer
+Dim ArgList
+Dim argListItem
+Dim tempstr
+Dim shtName
+Dim SplitBy
+Dim splitColName
+Dim GroupBy
+Dim outSheetName
+Dim sDataSheet
+Dim iColCnt, iRowCnt
+Dim sSplitBy
+Dim sSplitColumn
+Dim GroupByAry
+Dim j
+Dim iRowCntNew
+Dim iSplitCnt
+Dim nowGroup
+Dim nowSplitBy
+Dim nowValue
+Dim exist_Split
+Dim k
+Dim exist_Group
+Dim SortByHeaderName
+Dim realSortByHeaderName
+Dim DirectSort
+Dim LookUpTableWorkbook
+Dim LookUpTableWorksheet
+Dim wsOut, wsLookUp, wbLookUp
+Dim SortByRowOrCol
+Dim SortByHeaderNameList
+Dim itrSortName
+Dim curSortName
+Dim iSortNameCol
+Dim curSortOrderName
+Dim curSortOrder
+
+ArgList = Split(arg, ";")
+
+For Each argListItem In ArgList
+tempstr = Split(argListItem, ":")
+Select Case tempstr(0)
+Case "DataSheetName"
+    shtName = tempstr(1)
+Case "OutSheetName"
+    outSheetName = tempstr(1)
+Case "SortByHeaderName" ' can be single or list, format is Name1,asc/des, Name2, asc/des
+    SortByHeaderName = tempstr(1)
+Case "SortByRowOrCol"
+    SortByRowOrCol = tempstr(1)
+End Select
+Next argListItem
+
+' if OutSheetName is "sameSheet", new column will be added into original sheet
+If outSheetName <> "sameSheet" Then
+    Sheets(shtName).Copy After:=Sheets(shtName)
+    'ActiveWorkbook.Worksheets.Add After:=Worksheets(ActiveWorkbook.Worksheets.Count)
+    ActiveSheet.Name = outSheetName
+    Set wsOut = ActiveSheet
+Else
+    Set wsOut = Worksheets(shtName)
+End If
+
+iColCnt = wsOut.Cells(1, 1).CurrentRegion.Columns.Count
+iRowCnt = wsOut.Cells(1, 1).CurrentRegion.Rows.Count
+
+SortByHeaderNameList = Split(SortByHeaderName, ",")
+
+' Clear existing sort
+wsOut.Sort.SortFields.Clear
+
+For itrSortName = 0 To UBound(SortByHeaderNameList) / 2
+    ' Sort name
+    curSortName = SortByHeaderNameList(itrSortName * 2)
+    iSortNameCol = FindColNumByName(CStr(wsOut.Name), CInt(iColCnt), CStr(curSortName))
+    
+    ' Sort order
+    curSortOrderName = SortByHeaderNameList(itrSortName * 2 + 1)
+    Select Case curSortOrderName
+        Case "asc"
+            curSortOrder = xlAscending
+        Case "des"
+            curSortOrder = xlDescending
+    End Select
+        
+    ' Add sort
+    wsOut.Sort.SortFields.Add Key:=Cells(1, iSortNameCol), SortOn:=xlSortOnValues, Order:=curSortOrder, DataOption:=xlSortNormal
+Next itrSortName
+
+' Do the sort
+    With wsOut.Sort
+        .SetRange Cells(1, 1).CurrentRegion
+        .Header = xlYes
+        .MatchCase = False
+        .Orientation = xlTopToBottom
+        .SortMethod = xlPinYin
+        .Apply
+    End With
+
+End Function

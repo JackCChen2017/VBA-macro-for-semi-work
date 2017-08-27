@@ -1,0 +1,26 @@
+Function Sheet_remove(arg As String) As Integer
+Dim ArgList
+Dim argListItem
+Dim tempstr
+Dim shtName
+Dim itrWS ' iteration of worksheets
+
+ArgList = Split(arg, ";")
+
+For Each argListItem In ArgList
+    tempstr = Split(argListItem, ":")
+    Select Case tempstr(0)
+    Case "DataSheetName"
+        shtName = tempstr(1)
+    End Select
+Next argListItem
+
+For Each itrWS In ActiveWorkbook.Worksheets
+    If Regex_check(shtName, itrWS.Name) Then
+        Application.DisplayAlerts = False
+        itrWS.Delete
+        Application.DisplayAlerts = True
+    End If
+Next itrWS
+
+End Function

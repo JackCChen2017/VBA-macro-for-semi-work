@@ -1,0 +1,17 @@
+Function SheetExists(shtName As String, Optional wb As Workbook) As Boolean
+
+' can not set wb to ActiveWorkbook in funciton desclare line, need further study
+Dim sht As Worksheet
+Dim NewSheet As Worksheet
+If wb Is Nothing Then Set wb = ActiveWorkbook
+On Error Resume Next
+Set sht = wb.Sheets(shtName)
+On Error GoTo 0
+SheetExists = Not sht Is Nothing
+
+If Not SheetExists Then
+    Set NewSheet = ActiveWorkbook.Worksheets.Add
+    NewSheet.Name = shtName
+End If
+
+End Function

@@ -1,0 +1,127 @@
+Public Function Table_merge_same(arg As String)
+
+Dim iRowCnt
+Dim iColCnt
+Dim first_cell_row
+Dim first_cell_col
+Dim example_string
+Dim prev_cell
+Dim MergeBeginCellRow
+Dim MergeBeginCellCol
+Dim cur_cell
+Dim next_cell
+Dim MergeEndCellRow
+Dim MergeEndCellCol
+Dim ArgList, argListItem, tempstr, shtName, colName, rowName, selection_range
+Dim iRowCntTotal, iColCntTotal
+Dim i
+
+ArgList = Split(arg, ";")
+
+For Each argListItem In ArgList
+tempstr = Split(argListItem, ":")
+Select Case tempstr(0)
+Case "DataSheetName"
+    shtName = tempstr(1)
+'Case "OutSheetName"
+'    outSheetName = tempstr(1)
+Case "ColName" '
+    colName = tempstr(1)
+Case "RowName" '
+    rowName = tempstr(1)
+Case "Selection_range"
+    selection_range = tempstr(1)
+End Select
+Next argListItem
+
+
+Worksheets(shtName).Activate
+iRowCntTotal = ActiveSheet.Cells(1, 1).CurrentRegion.Rows.Count
+iColCntTotal = ActiveSheet.Cells(1, 1).CurrentRegion.Columns.Count
+
+If selection_range <> "" Then
+    ActiveSheet.Range(selection_range).Select
+End If
+    
+If rowName <> "" Then
+    For i = 1 To iRowCntTotal
+        If Cells(i, 1) = rowName Then Exit For
+    Next i
+    ActiveSheet.Range(Cells(i, 1), Cells(i, iColCntTotal)).Select
+End If
+
+If colName <> "" Then
+    For i = 1 To iColCntTotal
+        If Cells(1, i) = colName Then Exit For
+    Next i
+    ActiveSheet.Range(Cells(1, i), Cells(iRowCntTotal, i)).Select
+End If
+
+iRowCnt = Selection.Rows.Count
+iColCnt = Selection.Columns.Count
+first_cell_row = Selection.Row
+first_cell_col = Selection.Column
+
+With Selection
+    example_string = "Top left:" & vbCrLf & "row -" & .Row & vbCrLf & "column - " & .Column & vbCrLf & "address - " & Cells(.Row, .Column).Address(0, 0) & vbCrLf & vbCrLf & "Top right:" & vbCrLf & "row - " & .Row & vbCrLf & "column - " & .Columns.Count + .Column - 1 & vbCrLf & "address-" & Cells(.Row, .Columns.Count + .Column - 1).Address(0, 0)
+End With
+
+If iRowCnt = 1 Then 'Single row
+    prev_cell = Cells(first_cell_row, first_cell_col)
+    MergeBeginCellRow = first_cell_row
+    MergeBeginCellCol = first_cell_col
+
+    For i = 2 To iColCnt
+        cur_cell = Cells(first_cell_row, first_cell_col + i - 1)
+        next_cell = Cells(first_cell_row, first_cell_col + i)
+
+        If cur_cell = prev_cell And (cur_cell <> next_cell Or i = iColCnt) Then
+            'do the merge
+            MergeEndCellRow = first_cell_row
+            MergeEndCellCol = first_cell_col + i - 1
+            Application.DisplayAlerts = False
+            Range(Cells(MergeBeginCellRow, MergeBeginCellCol), Cells(MergeEndCellRow, MergeEndCellCol)).Merge
+            Application.DisplayAlerts = True
+        ElseIf cur_cell = prev_cell And cur_cell = next_cell Then
+            prev_cell = cur_cell
+        ElseIf cur_cell <> prev_cell Then
+            prev_cell = cur_cell
+            MergeBeginCellRow = first_cell_row
+            MergeBeginCellCol = first_cell_col + i - 1
+        Else
+
+        End If
+    Next i
+End If
+
+If iColCnt = 1 Then 'single column
+    prev_cell = Cells(first_cell_row, first_cell_col)
+    MergeBeginCellRow = first_cell_row
+    MergeBeginCellCol = first_cell_col
+
+    For i = 2 To iRowCnt
+        cur_cell = Cells(first_cell_row + i - 1, first_cell_col)
+        next_cell = Cells(first_cell_row + i, first_cell_col)
+
+        If cur_cell = prev_cell And (cur_cell <> next_cell Or i = iRowCnt) Then
+            'do the merge
+            MergeEndCellRow = first_cell_row + i - 1
+            MergeEndCellCol = first_cell_col
+            Application.DisplayAlerts = False
+            Range(Cells(MergeBeginCellRow, MergeBeginCellCol), Cells(MergeEndCellRow, MergeEndCellCol)).Merge
+            Application.DisplayAlerts = True
+        ElseIf cur_cell = prev_cell And cur_cell = next_cell Then
+            prev_cell = cur_cell
+        ElseIf cur_cell <> prev_cell Then
+            prev_cell = cur_cell
+            MergeBeginCellRow = first_cell_row + i - 1
+            MergeBeginCellCol = first_cell_col
+        Else
+
+        End If
+    Next i
+End If
+
+Cells(1, 1).Select
+
+End Function

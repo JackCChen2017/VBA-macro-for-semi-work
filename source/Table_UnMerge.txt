@@ -1,0 +1,34 @@
+Public Sub Table_UnMerge()
+
+Dim iRowCnt
+Dim iColCnt
+Dim first_cell_row
+Dim first_cell_col
+Dim example_string
+Dim prev_cell
+Dim MergeBeginCellRow
+Dim MergeBeginCellCol
+Dim cur_cell
+Dim next_cell
+Dim MergeEndCellRow
+Dim MergeEndCellCol
+
+iRowCnt = Selection.Rows.Count
+iColCnt = Selection.Columns.Count
+first_cell_row = Selection.Row
+first_cell_col = Selection.Column
+Selection.UnMerge
+
+If iRowCnt = 1 Then 'single row
+    For i = 2 To iColCnt
+        If Cells(first_cell_row, first_cell_col + i - 1) = "" Then Cells(first_cell_row, first_cell_col + i - 1) = Cells(firts_cell_row, first_cell_col + i - 2)
+    Next i
+End If
+
+If iColCnt = 1 Then 'single Col
+    For i = 2 To iRowCnt
+        If Cells(first_cell_row + i - 1, first_cell_col) = "" Then Cells(first_cell_row + i - 1, first_cell_col) = Cells(firts_cell_row + i - 2, first_cell_col)
+    Next i
+End If
+
+End Sub

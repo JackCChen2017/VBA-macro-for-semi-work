@@ -1,0 +1,90 @@
+Function Table_merge(arg As String) As Integer
+Dim ArgList
+Dim argListItem
+Dim tempstr
+Dim shtName
+Dim SplitBy
+Dim splitColName
+Dim GroupBy
+Dim outSheetName
+Dim sDataSheet
+Dim iColCnt, iRowCnt
+Dim sSplitBy
+Dim sSplitColumn
+Dim GroupByAry
+Dim j
+Dim iRowCntNew
+Dim iSplitCnt
+Dim nowGroup
+Dim nowSplitBy
+Dim nowValue
+Dim exist_Split
+Dim k
+Dim exist_Group
+Dim SortByHeaderName
+Dim realSortByHeaderName
+Dim DirectSort
+Dim LookUpTableWorkbook
+Dim LookUpTableWorksheet
+Dim wsOut, wsLookUp, wbLookUp
+Dim WantedHeaderName
+Dim WantedHeaderNameList
+Dim i
+Dim iLastRow
+Dim itrWS ' iteration of worksheets
+Dim iRow
+Dim iCol
+Dim curCol
+Dim NonExistFillValue
+
+ArgList = Split(arg, ";")
+
+For Each argListItem In ArgList
+    tempstr = Split(argListItem, ":")
+    Select Case tempstr(0)
+    Case "DataSheetName"
+        shtName = tempstr(1)
+    Case "OutSheetName"
+        outSheetName = tempstr(1)
+    Case "WantedHeaderName" ' can be single or list
+        WantedHeaderName = tempstr(1)
+    Case "NonExistFillValue"
+        NonExistFillValue = tempstr(1)
+    End Select
+Next argListItem
+
+ActiveWorkbook.Worksheets.Add After:=Worksheets(ActiveWorkbook.Worksheets.Count)
+ActiveSheet.Name = outSheetName
+Set wsOut = ActiveSheet
+
+WantedHeaderNameList = Split(WantedHeaderName, ",")
+For i = 0 To UBound(WantedHeaderNameList)
+    wsOut.Cells(1, i + 1) = WantedHeaderNameList(i)
+Next i
+iLastRow = 2
+
+For Each itrWS In ActiveWorkbook.Worksheets
+    If Regex_check(shtName, itrWS.Name) Then
+        iRow = Worksheets(itrWS.Name).Cells(1, 1).CurrentRegion.Rows.Count
+        iCol = Worksheets(itrWS.Name).Cells(1, 1).CurrentRegion.Columns.Count
+        Worksheets(itrWS.Name).Activate
+        For i = 0 To UBound(WantedHeaderNameList)
+            curCol = FindColNumByName(itrWS.Name, CInt(iCol), CStr(WantedHeaderNameList(i)))
+            If curCol <> 0 Then
+                Worksheets(itrWS.Name).Range(Cells(2, curCol), Cells(iRow, curCol)).Copy Destination:=wsOut.Cells(iLastRow, i + 1)
+            Else
+                ' if the column does not exist, fill with default value
+                wsOut.Range(Cells(iLastRow, i + 1), Cells(iLastRow + iRow - 2, i + 1)) = NonExistFillValue
+            End If
+        Next i
+        iLastRow = iLastRow + iRow - 1 ' -1 is due to header row should be deducted
+    End If
+Next itrWS
+
+wsOut.Activate
+'set all cells format
+Cells.Select
+Selection.Columns.AutoFit
+Range("A1").Select
+
+End Function

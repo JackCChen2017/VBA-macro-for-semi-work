@@ -1,0 +1,46 @@
+Function Table_del_column(arg As String) As Integer
+Dim ArgList
+Dim argListItem
+Dim tempstr
+Dim shtName
+Dim outSheetName
+Dim delColName
+Dim wsOut
+Dim iColCnt
+Dim arrayColName
+Dim i
+
+ArgList = Split(arg, ";")
+
+For Each argListItem In ArgList
+tempstr = Split(argListItem, ":")
+Select Case tempstr(0)
+Case "DataSheetName"
+    shtName = tempstr(1)
+Case "OutSheetName" ' if OutSheetName is "sameSheet", new column will be added into original sheet
+    outSheetName = tempstr(1)
+Case "DelColName"
+    delColName = tempstr(1)
+End Select
+Next argListItem
+
+' if OutSheetName is "sameSheet", new column will be added into original sheet
+If outSheetName <> "sameSheet" Then
+    Sheets(shtName).Copy After:=Sheets(shtName)
+    'ActiveWorkbook.Worksheets.Add After:=Worksheets(ActiveWorkbook.Worksheets.Count)
+    ActiveSheet.Name = outSheetName
+    Set wsOut = ActiveSheet
+Else
+    Set wsOut = Worksheets(shtName)
+End If
+
+iColCnt = wsOut.Cells(1, 1).CurrentRegion.Columns.Count
+
+arrayColName = Split(delColName, ",")
+For i = 0 To UBound(arrayColName)
+    wsOut.Columns(FindColNumByName(wsOut.Name, CInt(iColCnt), CStr(arrayColName(i)))).Delete
+Next i
+
+wsOut.Activate
+
+End Function

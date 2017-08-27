@@ -1,0 +1,27 @@
+Function Regex_check(ByVal sPattern As String, sTestStr As String) As Variant
+' check if sTestStr match sPattern
+' http://stackoverflow.com/questions/22542834/how-to-use-regular-expressions-regex-in-microsoft-excel-both-in-cell-and-loops
+' Step 1: Add VBA reference to "Microsoft VBScript Regular Expressions 5.5"
+' Tools -> "References" -> "Microsoft VBScript Regular Expressions 5.5" -> "OK"
+Dim regEx As New RegExp
+
+Regex_check = 0
+
+With regEx
+    .Global = True
+    .MultiLine = True
+    .IgnoreCase = False
+    .Pattern = sPattern
+End With
+
+'if below test triggers error: method 'test' of object 'iregexp2' failed, need check if sPattern is legal
+' previous wrong sPattern string are:
+' Data (2)1   --->  ( and ) are not escaped
+' Data \(2\)?*     --->   * can not follow ?
+' Data \(2\).*   ---> legal pattern string
+If regEx.test(sTestStr) Then
+    'matched
+    Regex_check = 1
+End If
+
+End Function
