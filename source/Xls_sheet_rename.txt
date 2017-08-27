@@ -1,0 +1,34 @@
+Function Xls_sheet_rename(arg As String) As Integer
+Dim ArgList
+Dim argListItem
+Dim tempstr
+Dim sourceWorkbook
+Dim wbSource
+Dim oldName
+Dim newName
+
+
+ArgList = Split(arg, ";")
+
+For Each argListItem In ArgList
+    tempstr = Split(argListItem, ":")
+    Select Case tempstr(0)
+    Case "SourceWorkbook"
+        sourceWorkbook = tempstr(1)
+    Case "OldName"
+        oldName = tempstr(1)
+    Case "NewName"
+        newName = tempstr(1)
+    End Select
+Next argListItem
+
+' if OutSheetName is "sameSheet", new column will be added into original sheet
+If sourceWorkbook = "sameBook" Then
+    Set wbSource = ActiveWorkbook
+Else
+    Set wbSource = Workbooks(sourceWorkbook)
+End If
+
+wbSource.Worksheets(oldName).Name = newName
+
+End Function

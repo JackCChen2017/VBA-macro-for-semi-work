@@ -1,0 +1,40 @@
+Function Xls_sheet_copy(arg As String) As Integer
+Dim ArgList
+Dim argListItem
+Dim tempstr
+Dim sourceWorkbook
+Dim targetWorkbook
+Dim sourceWorksheet
+Dim wbSource
+Dim wbTarget
+
+ArgList = Split(arg, ";")
+
+For Each argListItem In ArgList
+    tempstr = Split(argListItem, ":")
+    Select Case tempstr(0)
+    Case "SourceWorkbook"
+        sourceWorkbook = tempstr(1)
+    Case "TargetWorkbook"
+        targetWorkbook = tempstr(1)
+    Case "SourceWorksheet"
+        sourceWorksheet = tempstr(1)
+    End Select
+Next argListItem
+
+' if OutSheetName is "sameSheet", new column will be added into original sheet
+If sourceWorkbook = "sameBook" Then
+    Set wbSource = ActiveWorkbook
+Else
+    Set wbSource = Workbooks(sourceWorkbook)
+End If
+
+If targetWorkbook = "sameBook" Then
+    Set wbTarget = ActiveWorkbook
+Else
+    Set wbTarget = Workbooks(targetWorkbook)
+End If
+
+wbSource.Worksheets(sourceWorksheet).Copy before:=wbTarget.Worksheets(1)
+
+End Function
