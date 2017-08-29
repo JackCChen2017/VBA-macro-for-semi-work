@@ -74,6 +74,7 @@ For Each itrWS In ActiveWorkbook.Worksheets
                 Worksheets(itrWS.Name).Range(Cells(2, curCol), Cells(iRow, curCol)).Copy Destination:=wsOut.Cells(iLastRow, i + 1)
             Else
                 ' if the column does not exist, fill with default value
+                wsOut.Activate
                 wsOut.Range(Cells(iLastRow, i + 1), Cells(iLastRow + iRow - 2, i + 1)) = NonExistFillValue
             End If
         Next i
