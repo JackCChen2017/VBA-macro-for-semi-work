@@ -1,0 +1,79 @@
+Public Function Table_stack_column(arg As String)
+
+Dim iRowCnt
+Dim iColCnt
+Dim first_cell_row
+Dim first_cell_col
+Dim example_string
+Dim prev_cell
+Dim MergeBeginCellRow
+Dim MergeBeginCellCol
+Dim cur_cell
+Dim next_cell
+Dim MergeEndCellRow
+Dim MergeEndCellCol
+Dim ArgList, argListItem, tempstr, shtName, colName, rowName, selection_range, outSheetName
+Dim iRowCntTotal, iColCntTotal
+Dim i
+Dim wsOut
+Dim stackColName
+Dim keepColName
+Dim newLabelColName
+Dim newValueColName
+Dim keepColNameList
+
+ArgList = Split(arg, ";")
+
+For Each argListItem In ArgList
+    tempstr = Split(argListItem, ":")
+    Select Case tempstr(0)
+    Case "DataSheetName"
+        shtName = tempstr(1)
+    Case "OutSheetName"
+        outSheetName = tempstr(1)
+    Case "KeepColName" '
+        keepColName = tempstr(1)
+    Case "StackColName" '
+        stackColName = tempstr(1)
+    Case "NewLabelColName" '
+        newLabelColName = tempstr(1)
+    Case "NewValueColName" '
+        newValueColName = tempstr(1)
+    End Select
+Next argListItem
+
+' if OutSheetName is "sameSheet", new column will be added into original sheet
+If outSheetName <> "sameSheet" Then
+    Sheets(shtName).Copy After:=Sheets(shtName)
+    'ActiveWorkbook.Worksheets.Add After:=Worksheets(ActiveWorkbook.Worksheets.Count)
+    ActiveSheet.Name = outSheetName
+    Set wsOut = ActiveSheet
+Else
+    Set wsOut = Worksheets(shtName)
+End If
+
+wsOut.Activate
+iRowCnt = wsOut.Cells(1, 1).CurrentRegion.Rows.Count
+iColCnt = wsOut.Cells(1, 1).CurrentRegion.Columns.Count
+
+keepColNameList = Split(keepColName, ",")
+For i = 0 To UBound(keepColNameList)
+    wsOut.Columns(FindColNumByName(wsOut.Name, CInt(iColCnt), CStr(keepColNameList(i)))).Copy Destination:=wsOut.Cells(1, iColCnt + i + 2)
+Next i
+
+iLabelCol = iColCnt + UBound(keepColNameList) + 3
+iValueCol = iLabelCol + 1
+Cells(1, iLabelCol) = newLabelColName
+Cells(1, iValueCol) = newValueColName
+
+stackColNameList = Split(stackColName, ",")
+For i = 0 To UBound(stackColNameList)
+    iCurCol = FindColNumByName(wsOut.Name, CInt(iColCnt), CStr(stackColNameList(i)))
+    wsOut.Range(Cells(i * (iRowCnt - 1) + 2, iLabelCol), Cells(i * (iRowCnt - 1) + (iRowCnt - 1) + 1, iLabelCol)) = stackColNameList(i)
+    wsOut.Range(Cells(2, iCurCol), Cells(iRowCnt, iCurCol)).Copy Destination:=wsOut.Cells(i * (iRowCnt - 1) + 2, iValueCol)
+Next i
+
+wsOut.Range(Cells(2, iColCnt + 2), Cells(iRowCnt, iLabelCol - 1)).Copy Destination:=wsOut.Range(Cells(iRowCnt + 1, iColCnt + 2), Cells(UBound(stackColNameList) * (iRowCnt - 1) + (iRowCnt - 1) + 1, iLabelCol - 1))
+wsOut.Range(Columns(1), Columns(iColCnt + 1)).Delete
+
+End Function
