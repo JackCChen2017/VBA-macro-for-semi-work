@@ -1,0 +1,66 @@
+Function Table_format(arg As String) As Integer
+Dim ArgList
+Dim argListItem
+Dim tempstr
+Dim shtName
+Dim outSheetName
+Dim wsOut
+Dim sheetRange
+Dim formatString
+Dim itrFormatString
+Dim formatStringList
+Dim curFormatName
+Dim curFormatSetting
+
+ArgList = Split(arg, ";")
+
+For Each argListItem In ArgList
+    tempstr = Split(argListItem, ":")
+    Select Case tempstr(0)
+    Case "DataSheetName"
+        shtName = tempstr(1)
+    Case "OutSheetName" ' if OutSheetName is "sameSheet", new column will be added into original sheet
+        outSheetName = tempstr(1)
+    Case "SheetRange"
+        sheetRange = tempstr(1)
+    Case "FormatString"
+        formatString = tempstr(1)
+    End Select
+Next argListItem
+
+' if OutSheetName is "sameSheet", new row will be added into original sheet
+If outSheetName <> "sameSheet" Then
+    Sheets(shtName).Copy After:=Sheets(shtName)
+    'ActiveWorkbook.Worksheets.Add After:=Worksheets(ActiveWorkbook.Worksheets.Count)
+    ActiveSheet.Name = outSheetName
+    Set wsOut = ActiveSheet
+Else
+    Set wsOut = Worksheets(shtName)
+End If
+
+wsOut.Activate
+wsOut.Range(Replace(sheetRange, "#", ":")).Select
+
+formatStringList = Split(formatString, ",")
+For itrFormatString = 0 To UBound(formatStringList) / 2
+    ' Format name
+    curFormatName = formatStringList(itrFormatString * 2)
+    
+    ' Format setting
+    curFormatSetting = formatStringList(itrFormatString * 2 + 1)
+    Select Case curFormatName
+        Case "fontname"
+            Selection.Font.Name = curFormatSetting
+        Case "fontsize"
+            Selection.Font.Size = curFormatSetting
+        Case "fontcolor"
+            Selection.Font.Color = RGB(CInt(Left(curFormatSetting, 3)), CInt(Mid(curFormatSetting, 4, 3)), CInt(Mid(curFormatSetting, 7, 3)))
+        Case "fontbold"
+            Selection.Font.Bold = CInt(curFormatSetting)
+        Case "borderslinestyle"
+            Selection.Borders.LineStyle = curFormatSetting
+    End Select
+        
+Next itrFormatString
+    
+End Function
