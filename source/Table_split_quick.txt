@@ -1,4 +1,5 @@
-Function Table_split(arg As String) As Integer
+Function Table_split_quick(arg As String) As Integer
+' This function is based on assumption that the data is the stack result of iGroupBy x iSplit. If not, need use Table_split instead.
 Dim ArgList
 Dim argListItem
 Dim tempstr
@@ -23,6 +24,7 @@ Dim k
 Dim exist_Group
 Dim i
 Dim wsOut
+Dim iGroupCnt
 
 ArgList = Split(arg, ";")
 
@@ -99,56 +101,30 @@ With wsOut.Sort
 End With
 wsOut.Sort.SortFields.Clear
 
-'Start to split
+' Start to split
+' ###################
 iRowCntNew = wsOut.Cells(1, 1).CurrentRegion.Rows.Count
 
+' decide iGroupCnt
+i = 3
+While Cells(i, 2) = Cells(2, 2)
+    i = i + 1
+Wend
+iGroupCnt = i - 2
+
+' copy GroupBy
 wsOut.Cells(1, 4) = CStr(wsOut.Cells(1, 1)) 'GroupBy
-wsOut.Cells(2, 4) = CStr(wsOut.Cells(2, 1)) 'first entry's GroupBy
-wsOut.Cells(1, 5) = CStr(wsOut.Cells(2, 2)) 'SplitBy
-wsOut.Cells(2, 5) = wsOut.Cells(2, 3) 'first entry's SplitBy
+wsOut.Range(Cells(2, 1), Cells(iGroupCnt + 1, 1)).Copy Destination:=wsOut.Cells(2, 4)
 
-iSplitCnt = 1
-For i = 3 To iRowCntNew
-    nowGroup = CStr(wsOut.Cells(i, 1))
-    nowSplitBy = CStr(wsOut.Cells(i, 2))
-    nowValue = wsOut.Cells(i, 3)
+' decide iSplitCnt
+iSplitCnt = (iRowCntNew - 1) / iGroupCnt
 
-    ' decide j, split column number
-
-    exist_Split = 0
-    For j = 5 To iSplitCnt + 4
-
-        If CStr(wsOut.Cells(1, j)) = nowSplitBy Then
-            exist_Split = 1
-            Exit For
-        End If
-    Next j
-
-    If exist_Split = 0 Then
-        iSplitCnt = iSplitCnt + 1
-        wsOut.Cells(1, j) = nowSplitBy
-    End If
-
-    ' decide k, Group row number
-    k = 2
-    exist_Group = 0
-    While wsOut.Cells(k, 4) <> "" And exist_Group = 0
-        If wsOut.Cells(k, 4) = nowGroup Then
-            exist_Group = 1
-            k = k - 1
-        End If
-        k = k + 1
-    Wend
-
-    If exist_Group = 0 Then
-        wsOut.Cells(k, 4) = nowGroup
-    End If
-
-    'fill Value
-    wsOut.Cells(k, j) = nowValue
-
-Next i 'i=3 to iRowCntNew
-
+' do the split (fill the value)
+For i = 0 To iSplitCnt - 1
+    wsOut.Cells(1, 5 + i) = wsOut.Cells(i * iGroupCnt + 2, 2)
+    wsOut.Range(Cells(i * iGroupCnt + 2, 3), Cells(i * iGroupCnt + iGroupCnt + 1, 3)).Copy Destination:=wsOut.Cells(2, 5 + i)
+Next i
+' #######################
 'split done, do clean up
 
 'Delete Column 1,2,3

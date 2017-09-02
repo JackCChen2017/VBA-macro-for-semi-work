@@ -9,6 +9,7 @@ Dim ArgList, argListItem, tempstr, fileListStr, filterStr, fileList, fileListIte
 Dim MyDir
 Dim cn, strcon, strSQL, rs
 Dim lastRow
+Dim startRow
 Dim resultSheetName
 Dim strSQLSELECT, strSQLWHERE
 Dim iCols
@@ -58,9 +59,9 @@ For Each fileListItem In fileList
         Worksheets(resultSheetName).Cells(1, 1).Value = "lim_file_name"
     End If
     Worksheets(resultSheetName).Cells(lastRow, 2).CopyFromRecordset rs
-    StartRow = lastRow
+    startRow = lastRow
     lastRow = Worksheets(resultSheetName).Cells(1, 2).CurrentRegion.Rows.Count + 1
-    Worksheets(resultSheetName).Range("A" & StartRow & ":A" & lastRow - 1) = fileListItem
+    Worksheets(resultSheetName).Range("A" & startRow & ":A" & lastRow - 1) = fileListItem
     'cn.Execute strSQL
     rs.Close
     cn.Close

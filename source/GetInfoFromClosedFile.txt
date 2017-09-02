@@ -1,9 +1,10 @@
 Private Function GetInfoFromClosedFile(ByVal wbPath As String, wbName As String, wsName As String, cellRef As String) As Variant
+Dim arg
 GetInfoFromClosedFile = ""
 If Right(wbPath, 1) <> "" Then wbPath = wbPath & ""
     If Dir(wbPath & "" & wbName) = "" Then Exit Function
     arg = "'" & wbPath & "[" & wbName & "]" & wsName & "'!" & Range(cellRef).Address(True, True, xlR1C1)
     On Error Resume Next
-    GetInfoFromClosedFile = ExecuteExcel4Macro(arg)
+        GetInfoFromClosedFile = ExecuteExcel4Macro(arg)
     On Error GoTo 0
 End Function

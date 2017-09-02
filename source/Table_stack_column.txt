@@ -21,6 +21,10 @@ Dim keepColName
 Dim newLabelColName
 Dim newValueColName
 Dim keepColNameList
+Dim iLabelCol
+Dim iValueCol
+Dim stackColNameList
+Dim iCurCol
 
 ArgList = Split(arg, ";")
 
