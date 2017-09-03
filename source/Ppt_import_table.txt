@@ -1,0 +1,84 @@
+Function Ppt_import_table(arg As String) As Integer
+Dim ArgList
+Dim argListItem
+Dim tempstr
+Dim pptApplication As PowerPoint.Application
+Dim activeSlide As PowerPoint.Slide
+
+ArgList = Split(arg, ";")
+
+For Each argListItem In ArgList
+tempstr = Split(argListItem, ":")
+Select Case tempstr(0)
+'Case "Filepath"
+'    sFilepath = tempstr(1)
+Case "PptFilename"
+    pptFilename = tempstr(1)
+Case "XlsFilename"
+    xlsFilename = tempstr(1)
+Case "XlsSheetname"
+    xlsSheetName = tempstr(1)
+Case "PptSlideNumber" ' title slide's number is 1
+    pptSlideNumber = tempstr(1)
+Case "XlsTableRange"
+    xlsTableRange = tempstr(1)
+Case "X"
+    x = tempstr(1)
+Case "Y"
+    y = tempstr(1)
+Case "W"
+    w = tempstr(1)
+Case "H"
+    h = tempstr(1)
+End Select
+Next argListItem
+
+'Look for existing instance
+On Error Resume Next
+    Set pptApplication = GetObject(, "PowerPoint.Application")
+On Error GoTo 0
+     
+'Let's create a new PowerPoint
+If pptApplication Is Nothing Then
+    Set pptApplication = New PowerPoint.Application
+End If
+
+Set curPresentation = pptApplication.Presentations(pptFilename)
+
+If xlsFilename = "ActiveWorkbook" Then
+    Set wb = ActiveWorkbook
+Else
+    Set wb = Workbooks(xlsFilename)
+End If
+
+Set ws = wb.Worksheets(xlsSheetName)
+
+If CInt(pptSlideNumber) > 0 Then
+    Set curSlide = curPresentation.Slides(CInt(pptSlideNumber))
+Else
+    Set curSlide = curPresentation.Slides.Add(curPresentation.Slides.Count + 1, ppLayoutTitle)
+End If
+
+ws.Range(Replace(xlsTableRange, "#", ":")).CopyPicture
+Set curPic = curSlide.Shapes.Paste
+        
+If x <> "" Then
+    curPic.Left = CDbl(x) / 3.528 * 100
+End If
+        
+If y <> "" Then
+    curPic.Top = CDbl(y) / 3.528 * 100
+End If
+        
+curPic.LockAspectRatio = msoFalse
+If w <> "" Then
+    curPic.Width = CDbl(w) / 3.528 * 100 ' 100 is 3.528cm for width
+End If
+        
+If h <> "" Then
+    curPic.Height = CDbl(h) / 3.528 * 100 ' 100 is 3.528cm for height
+End If
+        
+Set pptApplication = Nothing
+
+End Function

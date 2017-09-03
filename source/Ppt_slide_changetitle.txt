@@ -1,0 +1,40 @@
+Function Ppt_slide_changetitle(arg As String) As Integer
+Dim ArgList
+Dim argListItem
+Dim tempstr
+Dim pptApplication As PowerPoint.Application
+Dim activeSlide As PowerPoint.Slide
+
+ArgList = Split(arg, ";")
+
+For Each argListItem In ArgList
+tempstr = Split(argListItem, ":")
+Select Case tempstr(0)
+'Case "Filepath"
+'    sFilepath = tempstr(1)
+Case "Filename"
+    sFilename = tempstr(1)
+Case "SlideNumber" ' title slide's number is 1
+    iSlideNumber = tempstr(1)
+Case "NewTitle"
+    newTitle = tempstr(1)
+End Select
+Next argListItem
+
+'Look for existing instance
+On Error Resume Next
+    Set pptApplication = GetObject(, "PowerPoint.Application")
+On Error GoTo 0
+     
+'Let's create a new PowerPoint
+If pptApplication Is Nothing Then
+    Set pptApplication = New PowerPoint.Application
+End If
+
+Set curPresentation = pptApplication.Presentations(sFilename)
+
+curPresentation.Slides(CInt(iSlideNumber)).Shapes.Placeholders(1).TextFrame.TextRange = newTitle
+
+Set pptApplication = Nothing
+
+End Function

@@ -1,0 +1,44 @@
+Function Ppt_add_slide(arg As String) As Integer
+Dim ArgList
+Dim argListItem
+Dim tempstr
+Dim pptApplication As PowerPoint.Application
+Dim activeSlide As PowerPoint.Slide
+
+ArgList = Split(arg, ";")
+
+For Each argListItem In ArgList
+tempstr = Split(argListItem, ":")
+Select Case tempstr(0)
+'Case "Filepath"
+'    sFilepath = tempstr(1)
+Case "Filename"
+    sFilename = tempstr(1)
+Case "NewSlideCount"
+    newSlideCount = tempstr(1)
+Case "NewSlideLayout"
+    newSlideLayout = tempstr(1)
+End Select
+Next argListItem
+
+'Look for existing instance
+On Error Resume Next
+    Set pptApplication = GetObject(, "PowerPoint.Application")
+On Error GoTo 0
+     
+'Let's create a new PowerPoint
+If pptApplication Is Nothing Then
+    Set pptApplication = New PowerPoint.Application
+End If
+
+Set curPresentation = pptApplication.Presentations(sFilename)
+For i = 1 To CInt(newSlideCount)
+    Set curSlide = curPresentation.Slides.Add(curPresentation.Slides.Count + 1, ppLayoutTitle)
+    If newSlideLayout <> "" Then
+        curSlide.Layout = CInt(newSlideLayout)
+    End If
+Next i
+
+Set pptApplication = Nothing
+
+End Function

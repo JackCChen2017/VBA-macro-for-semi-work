@@ -1,0 +1,71 @@
+Function Ppt_create(arg As String) As Integer
+Dim ArgList
+Dim argListItem
+Dim tempstr
+Dim pptApplication As PowerPoint.Application
+Dim activeSlide As PowerPoint.Slide
+
+ArgList = Split(arg, ";")
+
+For Each argListItem In ArgList
+tempstr = Split(argListItem, ":")
+Select Case tempstr(0)
+Case "Filename"
+    sFilename = tempstr(1)
+Case "Template"
+    template = tempstr(1)
+Case "Title"
+    sTitle = tempstr(1)
+Case "Subtitle"
+    sSubtitle = tempstr(1)
+End Select
+Next argListItem
+
+'Look for existing instance
+On Error Resume Next
+    Set pptApplication = GetObject(, "PowerPoint.Application")
+On Error GoTo 0
+     
+'Let's create a new PowerPoint
+If pptApplication Is Nothing Then
+    Set pptApplication = New PowerPoint.Application
+End If
+
+'Make a presentation in PowerPoint
+'If pptApplication.Presentations.Count = 0 Then
+    Set curPresentation = pptApplication.Presentations.Add()
+'End If
+'curPresentation = pptApplication.Presentations.Add
+Set curSlide = curPresentation.Slides.Add(curPresentation.Slides.Count + 1, ppLayoutTitle)
+
+If sTitle <> "" Then
+    curSlide.Shapes.Placeholders.Item(1).TextFrame.TextRange.Text = sTitle
+End If
+
+If sSubtitle <> "" Then
+    curSlide.Shapes.Placeholders.Item(2).TextFrame.TextRange.Text = sSubtitle
+End If
+
+If template <> "" Then
+    pptApplication.ActivePresentation.ApplyTemplate Filename:=template
+End If
+
+If sFilename <> "" Then
+    'pptApplication.DisplayAlerts = False
+    On Error GoTo eh
+        curPresentation.SaveAs Filename:=sFilename
+    On Error GoTo 0
+    'pptApplication.DisplayAlerts = True
+End If
+
+noError:
+'MsgBox "no error"
+'AppActivate ("Microsoft PowerPoint")
+Set activeSlide = Nothing
+Set pptApplication = Nothing
+Exit Function
+
+eh:
+MsgBox "file save fail"
+
+End Function
