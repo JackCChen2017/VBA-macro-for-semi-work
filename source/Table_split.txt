@@ -67,7 +67,7 @@ wsOut.Columns(FindColNumByName(wsOut.Name, CInt(iColCnt), CStr(sSplitColumn))).C
 
 'Handle GroupColumn
 '1st GroupColumn Component
-Range(Cells(1, iColCnt + 1), Cells(iRowCnt, iColCnt)).Formula = "=" & Cells(1, FindColNumByName(CStr(wsOut.Name), CInt(iColCnt), CStr(GroupByAry(0)))).Address(ReferenceStyle:=xlA1, RowAbsolute:=False, ColumnAbsolute:=True)
+Range(Cells(1, iColCnt + 1), Cells(iRowCnt, iColCnt + 1)).Formula = "=" & Cells(1, FindColNumByName(CStr(wsOut.Name), CInt(iColCnt), CStr(GroupByAry(0)))).Address(ReferenceStyle:=xlA1, RowAbsolute:=False, ColumnAbsolute:=True)
 
 ' If GroupColumn Component >1, Concatinate them, will split them again at last
 If UBound(GroupByAry) > 0 Then
