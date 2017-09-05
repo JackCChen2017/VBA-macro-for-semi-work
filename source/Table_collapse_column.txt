@@ -1,0 +1,145 @@
+Public Function Table_collapse_column(arg As String)
+
+Dim iRowCnt
+Dim iColCnt
+Dim first_cell_row
+Dim first_cell_col
+Dim example_string
+Dim prev_cell
+Dim MergeBeginCellRow
+Dim MergeBeginCellCol
+Dim cur_cell
+Dim next_cell
+Dim MergeEndCellRow
+Dim MergeEndCellCol
+Dim ArgList, argListItem, tempstr, shtName, colName, rowName, selection_range, outSheetName
+Dim iRowCntTotal, iColCntTotal
+Dim i
+Dim wsOut
+Dim stackColName
+Dim keepColName
+Dim newLabelColName
+Dim newValueColName
+Dim keepColNameList
+Dim iLabelCol
+Dim iValueCol
+Dim stackColNameList
+Dim iCurCol
+Dim collapseColName
+Dim newColName
+Dim j
+
+ArgList = Split(arg, ";")
+
+For Each argListItem In ArgList
+    tempstr = Split(argListItem, ":")
+    Select Case tempstr(0)
+    Case "DataSheetName"
+        shtName = tempstr(1)
+    Case "OutSheetName"
+        outSheetName = tempstr(1)
+    Case "KeepColName" '
+        keepColName = tempstr(1)
+    Case "CollapseColName" '
+        collapseColName = tempstr(1)
+    Case "NewColName" '
+        newColName = tempstr(1)
+    End Select
+Next argListItem
+
+' if OutSheetName is "sameSheet", new column will be added into original sheet
+If outSheetName <> "sameSheet" Then
+    Sheets(shtName).Copy After:=Sheets(shtName)
+    'ActiveWorkbook.Worksheets.Add After:=Worksheets(ActiveWorkbook.Worksheets.Count)
+    ActiveSheet.Name = outSheetName
+    Set wsOut = ActiveSheet
+Else
+    Set wsOut = Worksheets(shtName)
+End If
+
+wsOut.Activate
+iRowCnt = wsOut.Cells(1, 1).CurrentRegion.Rows.Count
+iColCnt = wsOut.Cells(1, 1).CurrentRegion.Columns.Count
+
+keepColNameList = Split(keepColName, ",")
+'1st KeepColumn Component
+Range(Cells(1, iColCnt + 1), Cells(iRowCnt, iColCnt + 1)).Formula = "=" & Cells(1, FindColNumByName(CStr(wsOut.Name), CInt(iColCnt), CStr(keepColNameList(0)))).Address(ReferenceStyle:=xlA1, RowAbsolute:=False, ColumnAbsolute:=True)
+
+' If KeepColumn Component >1, Concatinate them, will split them again at last
+If UBound(keepColNameList) > 0 Then
+    For j = 1 To UBound(keepColNameList)
+        'if meet application-defined or object-defined error, check analysis script, KeepColumn may be wrong
+        Range(Cells(1, iColCnt + 1), Cells(iRowCnt, iColCnt + 1)).Formula = CStr(Cells(1, iColCnt + 1).Formula) & "&""#""&" & Cells(1, FindColNumByName(CStr(wsOut.Name), CInt(iColCnt), CStr(keepColNameList(j)))).Address(ReferenceStyle:=xlA1, RowAbsolute:=False, ColumnAbsolute:=True)
+    Next j
+End If
+
+' copy columns to be collapse
+iLabelCol = iColCnt + 2
+wsOut.Columns(FindColNumByName(wsOut.Name, CInt(iColCnt), CStr(collapseColName))).Copy Destination:=wsOut.Cells(1, iLabelCol)
+Cells(1, iLabelCol) = newColName
+
+' copy formula to value for concatinated column
+wsOut.Cells.Copy
+wsOut.Cells.PasteSpecial Paste:=xlPasteValues, Operation:=xlNone, skipblanks:=False, Transpose:=False
+
+'Delete All columns to leave only GroupBy,SplitBy,SplitColumn
+wsOut.Range(Columns(1), Columns(iColCnt)).Delete
+
+'Sort by keepColumn
+Range("A1").Select
+wsOut.Sort.SortFields.Clear
+wsOut.Sort.SortFields.Add Key:=Range("A:A"), SortOn:=xlSortOnValues, Order:=xlAscending, DataOption:=xlSortNormal 'KeepColumn
+With wsOut.Sort
+    .SetRange Range("A:B")
+    .Header = xlYes
+    .MatchCase = False
+    .Orientation = xlTopToBottom
+    .SortMethod = xlPinYin
+    .Apply
+End With
+wsOut.Sort.SortFields.Clear
+
+'below code are from merge_same
+first_cell_row = 2
+first_cell_col = 1
+    prev_cell = Cells(first_cell_row, first_cell_col)
+    MergeBeginCellRow = first_cell_row
+    MergeBeginCellCol = first_cell_col
+
+    For i = 2 To iRowCnt
+        cur_cell = Cells(first_cell_row + i - 1, first_cell_col)
+        next_cell = Cells(first_cell_row + i, first_cell_col)
+
+        If cur_cell = prev_cell And (cur_cell <> next_cell Or i = iRowCnt) Then
+            'do the collapse
+            MergeEndCellRow = first_cell_row + i - 1
+            MergeEndCellCol = first_cell_col
+            Cells(MergeBeginCellRow, MergeBeginCellCol + 1) = Join(Application.WorksheetFunction.Transpose(wsOut.Range("B" & CStr(MergeBeginCellRow) & ":B" & CStr(MergeEndCellRow)).Value), ",")
+            Range(Cells(MergeBeginCellRow + 1, MergeBeginCellCol), Cells(MergeEndCellRow, MergeEndCellCol)).Clear
+
+        ElseIf cur_cell = prev_cell And cur_cell = next_cell Then
+            prev_cell = cur_cell
+        ElseIf cur_cell <> prev_cell Then
+            prev_cell = cur_cell
+            MergeBeginCellRow = first_cell_row + i - 1
+            MergeBeginCellCol = first_cell_col
+        Else
+
+        End If
+    Next i
+
+' below are copy from Table_filter_row
+wsOut.Cells(1, 1).CurrentRegion.AutoFilter field:=1, Criteria1:="<>", VisibleDropDown:=True
+wsOut.Cells(1, 1).CurrentRegion.SpecialCells(xlCellTypeVisible, xlCellTypeConstants).Copy Destination:=Cells(iRowCnt + 1, 1)
+wsOut.Cells(1, 1).CurrentRegion.AutoFilter
+wsOut.Rows("1:" & iRowCnt).Delete
+
+'split multiple KeepCol (now is column A)
+If UBound(keepColNameList) > 0 Then
+    wsOut.Range(Columns(2), Columns(UBound(keepColNameList) + 1)).Insert
+
+    wsOut.Columns("A:A").Select
+    Selection.TextToColumns Destination:=Range("A1"), DataType:=xlDelimited, TextQualifier:=xlDoubleQuote, ConsecutiveDelimiter:=False, Tab:=False, Semicolon:=False, Comma:=False, Space:=False, Other:=True, OtherChar:="#", TrailingMinusNumbers:=True
+End If
+
+End Function
