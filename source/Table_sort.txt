@@ -87,6 +87,8 @@ For itrSortName = 0 To UBound(SortByHeaderNameList) / 2
     wsOut.Sort.SortFields.Add Key:=Cells(1, iSortNameCol), SortOn:=xlSortOnValues, Order:=curSortOrder, DataOption:=xlSortNormal
 Next itrSortName
 
+wsOut.Activate
+wsOut.Cells(1, 1).Select
 ' Do the sort
     With wsOut.Sort
         .SetRange Cells(1, 1).CurrentRegion
