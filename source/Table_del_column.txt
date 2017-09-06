@@ -38,7 +38,9 @@ iColCnt = wsOut.Cells(1, 1).CurrentRegion.Columns.Count
 
 arrayColName = Split(delColName, ",")
 For i = 0 To UBound(arrayColName)
-    wsOut.Columns(FindColNumByName(wsOut.Name, CInt(iColCnt), CStr(arrayColName(i)))).Delete
+    If FindColNumByName(wsOut.Name, CInt(iColCnt), CStr(arrayColName(i))) > 0 Then
+        wsOut.Columns(FindColNumByName(wsOut.Name, CInt(iColCnt), CStr(arrayColName(i)))).Delete
+    End If
 Next i
 
 wsOut.Activate
