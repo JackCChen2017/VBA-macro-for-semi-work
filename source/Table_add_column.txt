@@ -77,7 +77,11 @@ For i = 0 To UBound(arrayColFormula)
     If IsNumeric(arrayColFormula(i)) Then
         curFormulaStr = CStr(arrayColFormula(i))
     ElseIf Left(arrayColFormula(i), 2) = "OP" Then
-        curFormulaStr = CStr(Right(arrayColFormula(i), 1))
+        If arrayColFormula(i) = "OPComma" Then
+            curFormulaStr = ","
+        Else
+            curFormulaStr = CStr(Mid(arrayColFormula(i), 3, Len(arrayColFormula(i))))
+        End If
     Else
         curFormulaStr = wsOut.Cells(2, FindColNumByName(wsOut.Name, iColCnt, CStr(arrayColFormula(i)))).Address(ReferenceStyle:=xlA1, RowAbsolute:=False, ColumnAbsolute:=True)
     End If
