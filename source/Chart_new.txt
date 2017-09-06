@@ -162,6 +162,7 @@ For itrSTRow = 2 To iSTRowCnt
     ' add chart sheet
     wbDS.Activate
     wsDS.Activate
+    Set wsChartSheet = Nothing
     Set wsChartSheet = Worksheets.Add
     iChartSheetCnt = iChartSheetCnt + 1
     wsChartSheet.Name = "chart_" & CStr(iChartSheetCnt)
@@ -178,6 +179,8 @@ For itrSTRow = 2 To iSTRowCnt
     YMax = 999
     XLabel = ""
     YLabel = ""
+    iWidth = 300
+    iHeight = 300
     For Each ChartSettingListItem In ChartSettingList
         tempstr = Split(ChartSettingListItem, ":")
         Select Case tempstr(0)
@@ -201,6 +204,10 @@ For itrSTRow = 2 To iSTRowCnt
             XLabel = tempstr(1)
         Case "YLabel"
             YLabel = tempstr(1)
+        Case "Width"
+            iWidth = tempstr(1)
+        Case "Height"
+            iHeight = tempstr(1)
         End Select
     Next ChartSettingListItem
     
@@ -354,7 +361,7 @@ For itrSTRow = 2 To iSTRowCnt
     curChartBy = Cells(2, 1)
     curSeriesBy = Cells(2, 2)
     iChartCnt = wsChartSheet.ChartObjects.Count
-    Set curChartObject = wsChartSheet.ChartObjects.Add(300, 100 + iChartCnt * 300, 300, 300) ' left, top, width, height
+    Set curChartObject = wsChartSheet.ChartObjects.Add(300, 100 + iChartCnt * 300, iWidth, iHeight) ' left, top, width, height
     curChartObject.Chart.ChartType = iChartType
     curChartObject.Chart.HasTitle = True
     curChartObject.Chart.ChartTitle.Characters.Text = curChartBy
@@ -390,7 +397,7 @@ For itrSTRow = 2 To iSTRowCnt
             
             ' add need chart
             iChartCnt = wsChartSheet.ChartObjects.Count
-            Set curChartObject = wsChartSheet.ChartObjects.Add(300, 100 + iChartCnt * 300, 300, 300) ' left, top, width, height
+            Set curChartObject = wsChartSheet.ChartObjects.Add(300, 100 + iChartCnt * 300, iWidth, iHeight) ' left, top, width, height
             curChartObject.Chart.ChartType = iChartType
             curChartObject.Chart.HasTitle = True
             curChartObject.Chart.ChartTitle.Characters.Text = curChartBy
