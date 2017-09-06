@@ -88,6 +88,7 @@ If UBound(LookupValueList) = 0 Then
             iLUColCnt = wsLookUp.Cells(1, 1).CurrentRegion.Columns.Count
             ' iLookupValueCol = FindColNumByName(shtName, iColCnt, LookupValue) ' LIMITATION: currently lookup value must be first column of lookup table
             iReturnColumnNameCol = FindColNumByName(LookUpTableWorksheet, iLUColCnt, CStr(itrReturnColumnName))
+            wsOut.Activate
             wsOut.Range(Cells(2, iColCnt + 1), Cells(iRowCnt, iColCnt + 1)).Formula = "=Vlookup(" & wsOut.Cells(2, iLookupValueCol).Address(False, False, xlA1) & "," & "'" & LookUpTableWorksheet & "'" & "!$A$1:" & wsLookUp.Cells(1, 1).End(xlDown).End(xlToRight).Address(ReferenceStyle:=xlA1, RowAbsolute:=True, ColumnAbsolute:=True) & "" & "," & CStr(iReturnColumnNameCol) & ",0)"
 
         Else
@@ -99,6 +100,7 @@ If UBound(LookupValueList) = 0 Then
             wbLookUp.Activate
             iReturnColumnNameCol = FindColNumByName(LookUpTableWorksheet, iLUColCnt, CStr(itrReturnColumnName))
             origWB.Activate
+            wsOut.Activate
             wsOut.Range(Cells(2, iColCnt + 1), Cells(iRowCnt, iColCnt + 1)).Formula = "=Vlookup(" & wsOut.Cells(2, iLookupValueCol).Address(False, False, xlA1) & "," & "'[" & LookUpTableWorkbook & "]" & LookUpTableWorksheet & "'" & "!$A$1:" & wsLookUp.Cells(1, 1).End(xlDown).End(xlToRight).Address(ReferenceStyle:=xlA1, RowAbsolute:=True, ColumnAbsolute:=True) & "" & "," & CStr(iReturnColumnNameCol) & ",0)"
         End If
     
@@ -110,5 +112,9 @@ Else
 ' multi lookup value, to be added
 
 End If
+
+' copy formula to value
+wsOut.Cells.Copy
+wsOut.Cells.PasteSpecial Paste:=xlPasteValues, Operation:=xlNone, skipblanks:=False, Transpose:=False
 
 End Function
