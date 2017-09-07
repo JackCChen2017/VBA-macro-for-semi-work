@@ -8,7 +8,7 @@ Dim SplitBy
 Dim splitColName
 Dim GroupBy
 Dim sDataSheet
-Dim iColCnt As Integer, iRowCnt As Integer
+Dim iColCnt As Integer, iRowCnt
 Dim sSplitBy
 Dim sSplitColumn
 Dim GroupByAry
