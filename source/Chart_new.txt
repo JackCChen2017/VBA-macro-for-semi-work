@@ -93,6 +93,9 @@ Dim itrSeriesByColNum
 Dim arrayChartByColNum As Variant
 Dim arraySeriesByColNum As Variant
 Dim iChartType
+Dim chartSheetPrefix
+
+chartSeheetPrefix = "chart_"
 
 ArgList = Split(arg, ";")
 
@@ -105,6 +108,8 @@ For Each argListItem In ArgList
         SettingWorkbook = tempstr(1)
     Case "SettingSheetName"
         Setting_sheet = tempstr(1)
+    Case "ChartSheetPrefix"
+        chartSheetPrefix = tempstr(1)
     'Case "SeriesBy"
     '    SeriesByColName = tempstr(1)
     'Case "ChartBy"
@@ -165,7 +170,7 @@ For itrSTRow = 2 To iSTRowCnt
     Set wsChartSheet = Nothing
     Set wsChartSheet = Worksheets.Add
     iChartSheetCnt = iChartSheetCnt + 1
-    wsChartSheet.Name = "chart_" & CStr(iChartSheetCnt)
+    wsChartSheet.Name = chartSheetPrefix & CStr(iChartSheetCnt)
     
     ' parse chart setting
     ChartSettingList = Split(sChartSetting, ";")
