@@ -58,13 +58,14 @@ iSheetExist = 1
 While iSheetExist = 1
     On Error Resume Next
         Set sht = Worksheets("Data (2)" & CStr(nFile + 1))
+    
+        If sht Is Nothing Then
+            iSheetExist = 0
+        Else
+            nFile = nFile + 1
+            Set sht = Nothing
+        End If
     On Error GoTo 0
-    If sht Is Nothing Then
-        iSheetExist = 0
-    Else
-        nFile = nFile + 1
-        Set sht = Nothing
-    End If
 Wend
 
 For Each fileListItem In fileList
