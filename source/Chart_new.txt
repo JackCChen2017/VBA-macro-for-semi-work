@@ -95,7 +95,7 @@ Dim arraySeriesByColNum As Variant
 Dim iChartType
 Dim chartSheetPrefix
 
-chartSeheetPrefix = "chart_"
+chartSheetPrefix = "chart_"
 
 ArgList = Split(arg, ";")
 
