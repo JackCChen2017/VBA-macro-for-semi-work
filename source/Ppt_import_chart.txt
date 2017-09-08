@@ -62,7 +62,7 @@ Else
 End If
 
 For i = 1 To ws.ChartObjects.Count
-    If ws.ChartObjects(1).Chart.ChartTitle.Characters.Text = xlsChartName Then
+    If ws.ChartObjects(i).Chart.ChartTitle.Characters.Text = xlsChartName Then
         ws.ChartObjects(i).Chart.CopyPicture
         Set curPic = curSlide.Shapes.Paste
         
