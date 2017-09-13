@@ -178,10 +178,10 @@ For itrSTRow = 2 To iSTRowCnt
     sSeriesBy = ""
     XAxisType = ""
     YAxisType = ""
-    XMin = -999
-    YMin = -999
-    XMax = 999
-    YMax = 999
+    XMin = ""
+    YMin = ""
+    XMax = ""
+    YMax = ""
     XLabel = ""
     YLabel = ""
     iWidth = 300
@@ -209,6 +209,10 @@ For itrSTRow = 2 To iSTRowCnt
             XLabel = tempstr(1)
         Case "YLabel"
             YLabel = tempstr(1)
+        Case "CrossAtX"
+            CrossAtX = tempstr(1)
+        Case "CrossAtY"
+            CrossAtY = tempstr(1)
         Case "Width"
             iWidth = tempstr(1)
         Case "Height"
@@ -391,6 +395,15 @@ For itrSTRow = 2 To iSTRowCnt
             curChartObject.Chart.Axes(xlCategory, xlPrimary).AxisTitle.Caption = XLabel
             curChartObject.Chart.Axes(xlValue, xlPrimary).HasTitle = True
             curChartObject.Chart.Axes(xlValue, xlPrimary).AxisTitle.Caption = YLabel
+            If XAxisType = "Log" Then curChartObject.Chart.Axes(xlCategory, xlPrimary).Type = xlScaleLogarithmic
+            If YAxisType = "Log" Then curChartObject.Chart.Axes(xlValue, xlPrimary).Type = xlScaleLogarithmic
+            If CrossAtX <> "" Then curChartObject.Chart.Axes(xlCategory, xlPrimary).CrossAt = CDbl(CrossAtX)
+            If CrossAtY <> "" Then curChartObject.Chart.Axes(xlValue, xlPrimary).CrossAt = CDbl(CrossAtY)
+            If XMin <> "" Then curChartObject.Chart.Axes(xlCategory, xlPrimary).MinmumScale = CDbl(XMin)
+            If YMin <> "" Then curChartObject.Chart.Axes(xlValue, xlPrimary).MinmumScale = CDbl(YMin)
+            If XMax <> "" Then curChartObject.Chart.Axes(xlCategory, xlPrimary).MaxmumScale = CDbl(XMax)
+            If YMax <> "" Then curChartObject.Chart.Axes(xlValue, xlPrimary).MaxmumScale = CDbl(YMax)
+            
             
             ' set new Chart and series start location
             x1Row = i
@@ -442,7 +455,15 @@ For itrSTRow = 2 To iSTRowCnt
     curChartObject.Chart.Axes(xlCategory, xlPrimary).AxisTitle.Caption = XLabel
     curChartObject.Chart.Axes(xlValue, xlPrimary).HasTitle = True
     curChartObject.Chart.Axes(xlValue, xlPrimary).AxisTitle.Caption = YLabel
-    
+    If XAxisType = "Log" Then curChartObject.Chart.Axes(xlCategory, xlPrimary).Type = xlScaleLogarithmic
+    If YAxisType = "Log" Then curChartObject.Chart.Axes(xlValue, xlPrimary).Type = xlScaleLogarithmic
+    If CrossAtX <> "" Then curChartObject.Chart.Axes(xlCategory, xlPrimary).CrossAt = CDbl(CrossAtX)
+    If CrossAtY <> "" Then curChartObject.Chart.Axes(xlValue, xlPrimary).CrossAt = CDbl(CrossAtY)
+    If XMin <> "" Then curChartObject.Chart.Axes(xlCategory, xlPrimary).MinmumScale = CDbl(XMin)
+    If YMin <> "" Then curChartObject.Chart.Axes(xlValue, xlPrimary).MinmumScale = CDbl(YMin)
+    If XMax <> "" Then curChartObject.Chart.Axes(xlCategory, xlPrimary).MaxmumScale = CDbl(XMax)
+    If YMax <> "" Then curChartObject.Chart.Axes(xlValue, xlPrimary).MaxmumScale = CDbl(YMax)
+
 next_itrSTRow:
 Next itrSTRow
 
