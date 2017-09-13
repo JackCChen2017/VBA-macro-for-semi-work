@@ -59,7 +59,7 @@ Next argListItem
 
 ' if OutSheetName is "sameSheet", new column will be added into original sheet
 If outSheetName <> "sameSheet" Then
-    Sheets(shtName).Copy After:=Sheets(shtName)
+    Sheets(shtName).Copy after:=Sheets(shtName)
     'ActiveWorkbook.Worksheets.Add After:=Worksheets(ActiveWorkbook.Worksheets.Count)
     ActiveSheet.Name = outSheetName
     Set wsOut = ActiveSheet
@@ -87,9 +87,8 @@ For i = 0 To UBound(arrayColFormula)
     End If
     FormulaStr = FormulaStr & curFormulaStr
 Next i
-wsOut.Range(Cells(2, iColCnt + 1), Cells(iRowCnt, iColCnt + 1)).Formula = "=" & FormulaStr
-
 wsOut.Activate
+wsOut.Range(Cells(2, iColCnt + 1), Cells(iRowCnt, iColCnt + 1)).Formula = "=" & FormulaStr
 
 'copy value
     wsOut.Cells.Copy
