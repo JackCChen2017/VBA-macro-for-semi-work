@@ -73,7 +73,7 @@ Dim curChartBy
 Dim curSeriesBy
 Dim curChartObject
 Dim x1Row, x1Col, x2Row, x2Col, y1Row, y1Col, y2Row, y2Col
-Dim i
+Dim i, j
 Dim iSheetNum
 Dim cSer
 Dim iDSHeaderCnt As Integer
@@ -94,6 +94,12 @@ Dim arrayChartByColNum As Variant
 Dim arraySeriesByColNum As Variant
 Dim iChartType
 Dim chartSheetPrefix
+Dim iWidth
+Dim iHeight
+Dim CrossAtX, CrossAtY
+Dim HasGridLineX, HasGridLineY
+Dim itrLineChart
+Dim iColCopy
 
 chartSheetPrefix = "chart_"
 
@@ -145,6 +151,7 @@ iSTChartSettingCol = FindColNumByName(Setting_sheet, iSTHeaderCnt, "ChartSetting
 iChartCnt = 0
 iChartSheetCnt = 0
 
+
 For itrSTRow = 2 To iSTRowCnt
     wbST.Activate
     wsST.Activate
@@ -155,7 +162,8 @@ For itrSTRow = 2 To iSTRowCnt
         iChartType = -4169
     Case "Line"
         iChartType = 4
-    
+    Case "LineMarker"
+        iChartType = 65
     End Select
 
     sChartName = Cells(itrSTRow, iSTChartNameCol)
@@ -217,6 +225,13 @@ For itrSTRow = 2 To iSTRowCnt
             iWidth = tempstr(1)
         Case "Height"
             iHeight = tempstr(1)
+        Case "HasGridLineX"
+            HasGridLineX = tempstr(1)
+        Case "HasGridLineY"
+            HasGridLineY = tempstr(1)
+        Case "HasGridLineY"
+            HasGridLineY = tempstr(1)
+        
         End Select
     Next ChartSettingListItem
     
@@ -366,64 +381,26 @@ For itrSTRow = 2 To iSTRowCnt
         .Apply
     End With
     
-    ' Add Chart
-    curChartBy = Cells(2, 1)
-    curSeriesBy = Cells(2, 2)
-    iChartCnt = wsChartSheet.ChartObjects.Count
-    Set curChartObject = wsChartSheet.ChartObjects.Add(300, 100 + iChartCnt * 300, iWidth, iHeight) ' left, top, width, height
-    curChartObject.Chart.ChartType = iChartType
-    curChartObject.Chart.HasTitle = True
-    curChartObject.Chart.ChartTitle.Characters.Text = curChartBy
-
-    x1Row = 2
-    y1Row = 2
-    x1Col = 3
-    y1Col = 4
-    For i = 3 To Cells(1, 3).CurrentRegion.Rows.Count
-        If Cells(i, 1) <> curChartBy Then
-            ' new chartBy
-            ' add last series of previous chart
-            x2Row = i - 1
-            y2Row = i - 1
-            x2Col = 3
-            y2Col = 4
-            Set cSer = curChartObject.Chart.SeriesCollection.NewSeries
-            cSer.XValues = "=" & wsChartSheet.Name & "!" & wsChartSheet.Cells(x1Row, x1Col).Address(ReferenceStyle:=xlR1C1, RowAbsolute:=True, ColumnAbsolute:=True) & ":" & wsChartSheet.Cells(x2Row, x2Col).Address(ReferenceStyle:=xlR1C1, RowAbsolute:=True, ColumnAbsolute:=True)
-            cSer.Values = "=" & wsChartSheet.Name & "!" & wsChartSheet.Cells(y1Row, y1Col).Address(ReferenceStyle:=xlR1C1, RowAbsolute:=True, ColumnAbsolute:=True) & ":" & wsChartSheet.Cells(y2Row, y2Col).Address(ReferenceStyle:=xlR1C1, RowAbsolute:=True, ColumnAbsolute:=True)
-            cSer.Name = Cells(i - 1, 2)
-            curChartObject.Chart.Axes(xlCategory, xlPrimary).HasTitle = True
-            curChartObject.Chart.Axes(xlCategory, xlPrimary).AxisTitle.Caption = XLabel
-            curChartObject.Chart.Axes(xlValue, xlPrimary).HasTitle = True
-            curChartObject.Chart.Axes(xlValue, xlPrimary).AxisTitle.Caption = YLabel
-            If XAxisType = "Log" Then curChartObject.Chart.Axes(xlCategory, xlPrimary).Type = xlScaleLogarithmic
-            If YAxisType = "Log" Then curChartObject.Chart.Axes(xlValue, xlPrimary).Type = xlScaleLogarithmic
-            If CrossAtX <> "" Then curChartObject.Chart.Axes(xlCategory, xlPrimary).CrossAt = CDbl(CrossAtX)
-            If CrossAtY <> "" Then curChartObject.Chart.Axes(xlValue, xlPrimary).CrossAt = CDbl(CrossAtY)
-            If XMin <> "" Then curChartObject.Chart.Axes(xlCategory, xlPrimary).MinmumScale = CDbl(XMin)
-            If YMin <> "" Then curChartObject.Chart.Axes(xlValue, xlPrimary).MinmumScale = CDbl(YMin)
-            If XMax <> "" Then curChartObject.Chart.Axes(xlCategory, xlPrimary).MaxmumScale = CDbl(XMax)
-            If YMax <> "" Then curChartObject.Chart.Axes(xlValue, xlPrimary).MaxmumScale = CDbl(YMax)
-            
-            
-            ' set new Chart and series start location
-            x1Row = i
-            y1Row = i
-            x1Col = 3
-            y1Col = 4
-            curChartBy = Cells(i, 1)
-            curSeriesBy = Cells(i, 2)
-            
-            ' add need chart
-            iChartCnt = wsChartSheet.ChartObjects.Count
-            Set curChartObject = wsChartSheet.ChartObjects.Add(300, 100 + iChartCnt * 300, iWidth, iHeight) ' left, top, width, height
-            curChartObject.Chart.ChartType = iChartType
-            curChartObject.Chart.HasTitle = True
-            curChartObject.Chart.ChartTitle.Characters.Text = curChartBy
-        Else
-            ' not new chart, only new series
-            If Cells(i, 2) <> curSeriesBy Then
-                ' new seriesBy
-                ' add last series to current chart
+    ' add chart, handle is different by chart type
+    If iChartType = -4169 Then
+        ' chart type is scatter (-4169)
+        ' Add Chart
+        curChartBy = Cells(2, 1)
+        curSeriesBy = Cells(2, 2)
+        iChartCnt = wsChartSheet.ChartObjects.Count
+        Set curChartObject = wsChartSheet.ChartObjects.Add(300, 100 + iChartCnt * 300, iWidth, iHeight) ' left, top, width, height
+        curChartObject.Chart.ChartType = iChartType
+        curChartObject.Chart.HasTitle = True
+        curChartObject.Chart.ChartTitle.Characters.Text = curChartBy
+    
+        x1Row = 2
+        y1Row = 2
+        x1Col = 3
+        y1Col = 4
+        For i = 3 To Cells(1, 3).CurrentRegion.Rows.Count
+            If Cells(i, 1) <> curChartBy Then
+                ' new chartBy
+                ' add last series of previous chart
                 x2Row = i - 1
                 y2Row = i - 1
                 x2Col = 3
@@ -432,38 +409,156 @@ For itrSTRow = 2 To iSTRowCnt
                 cSer.XValues = "=" & wsChartSheet.Name & "!" & wsChartSheet.Cells(x1Row, x1Col).Address(ReferenceStyle:=xlR1C1, RowAbsolute:=True, ColumnAbsolute:=True) & ":" & wsChartSheet.Cells(x2Row, x2Col).Address(ReferenceStyle:=xlR1C1, RowAbsolute:=True, ColumnAbsolute:=True)
                 cSer.Values = "=" & wsChartSheet.Name & "!" & wsChartSheet.Cells(y1Row, y1Col).Address(ReferenceStyle:=xlR1C1, RowAbsolute:=True, ColumnAbsolute:=True) & ":" & wsChartSheet.Cells(y2Row, y2Col).Address(ReferenceStyle:=xlR1C1, RowAbsolute:=True, ColumnAbsolute:=True)
                 cSer.Name = Cells(i - 1, 2)
-            
+                curChartObject.Chart.Axes(xlCategory, xlPrimary).HasTitle = True
+                curChartObject.Chart.Axes(xlCategory, xlPrimary).AxisTitle.Caption = XLabel
+                curChartObject.Chart.Axes(xlValue, xlPrimary).HasTitle = True
+                curChartObject.Chart.Axes(xlValue, xlPrimary).AxisTitle.Caption = YLabel
+                If XAxisType = "Log" Then curChartObject.Chart.Axes(xlCategory, xlPrimary).ScaleType = xlScaleLogarithmic
+                If YAxisType = "Log" Then curChartObject.Chart.Axes(xlValue, xlPrimary).ScaleType = xlScaleLogarithmic
+                If CrossAtX <> "" Then curChartObject.Chart.Axes(xlCategory, xlPrimary).CrossAt = CDbl(CrossAtX)
+                If CrossAtY <> "" Then curChartObject.Chart.Axes(xlValue, xlPrimary).CrossAt = CDbl(CrossAtY)
+                If XMin <> "" Then curChartObject.Chart.Axes(xlCategory, xlPrimary).MinmumScale = CDbl(XMin)
+                If YMin <> "" Then curChartObject.Chart.Axes(xlValue, xlPrimary).MinmumScale = CDbl(YMin)
+                If XMax <> "" Then curChartObject.Chart.Axes(xlCategory, xlPrimary).MaxmumScale = CDbl(XMax)
+                If YMax <> "" Then curChartObject.Chart.Axes(xlValue, xlPrimary).MaxmumScale = CDbl(YMax)
+                If HasGridLineX <> "" Then curChartObject.Chart.Axes(xlCategory, xlPrimary).HasGridLine = True
+                If HasGridLineY <> "" Then curChartObject.Chart.Axes(xlValue, xlPrimary).HasGridLine = True
+                
+                
+                ' set new Chart and series start location
+                x1Row = i
+                y1Row = i
+                x1Col = 3
+                y1Col = 4
+                curChartBy = Cells(i, 1)
+                curSeriesBy = Cells(i, 2)
+                
+                ' add need chart
+                iChartCnt = wsChartSheet.ChartObjects.Count
+                Set curChartObject = wsChartSheet.ChartObjects.Add(300, 100 + iChartCnt * 300, iWidth, iHeight) ' left, top, width, height
+                curChartObject.Chart.ChartType = iChartType
+                curChartObject.Chart.HasTitle = True
+                curChartObject.Chart.ChartTitle.Characters.Text = curChartBy
+            Else
+                ' not new chart, only new series
+                If Cells(i, 2) <> curSeriesBy Then
+                    ' new seriesBy
+                    ' add last series to current chart
+                    x2Row = i - 1
+                    y2Row = i - 1
+                    x2Col = 3
+                    y2Col = 4
+                    Set cSer = curChartObject.Chart.SeriesCollection.NewSeries
+                    cSer.XValues = "=" & wsChartSheet.Name & "!" & wsChartSheet.Cells(x1Row, x1Col).Address(ReferenceStyle:=xlR1C1, RowAbsolute:=True, ColumnAbsolute:=True) & ":" & wsChartSheet.Cells(x2Row, x2Col).Address(ReferenceStyle:=xlR1C1, RowAbsolute:=True, ColumnAbsolute:=True)
+                    cSer.Values = "=" & wsChartSheet.Name & "!" & wsChartSheet.Cells(y1Row, y1Col).Address(ReferenceStyle:=xlR1C1, RowAbsolute:=True, ColumnAbsolute:=True) & ":" & wsChartSheet.Cells(y2Row, y2Col).Address(ReferenceStyle:=xlR1C1, RowAbsolute:=True, ColumnAbsolute:=True)
+                    cSer.Name = Cells(i - 1, 2)
+                
+                    ' set new series start location
+                    x1Row = i
+                    y1Row = i
+                    x1Col = 3
+                    y1Col = 4
+                    curSeriesBy = Cells(i, 2)
+                End If
+            End If
+        Next i
+        ' handle last series
+        x2Row = i - 1
+        y2Row = i - 1
+        x2Col = 3
+        y2Col = 4
+        Set cSer = curChartObject.Chart.SeriesCollection.NewSeries
+        cSer.XValues = "=" & wsChartSheet.Name & "!" & wsChartSheet.Cells(x1Row, x1Col).Address(ReferenceStyle:=xlR1C1, RowAbsolute:=True, ColumnAbsolute:=True) & ":" & wsChartSheet.Cells(x2Row, x2Col).Address(ReferenceStyle:=xlR1C1, RowAbsolute:=True, ColumnAbsolute:=True)
+        cSer.Values = "=" & wsChartSheet.Name & "!" & wsChartSheet.Cells(y1Row, y1Col).Address(ReferenceStyle:=xlR1C1, RowAbsolute:=True, ColumnAbsolute:=True) & ":" & wsChartSheet.Cells(y2Row, y2Col).Address(ReferenceStyle:=xlR1C1, RowAbsolute:=True, ColumnAbsolute:=True)
+        cSer.Name = Cells(i - 1, 2)
+        curChartObject.Chart.Axes(xlCategory, xlPrimary).HasTitle = True
+        curChartObject.Chart.Axes(xlCategory, xlPrimary).AxisTitle.Caption = XLabel
+        curChartObject.Chart.Axes(xlValue, xlPrimary).HasTitle = True
+        curChartObject.Chart.Axes(xlValue, xlPrimary).AxisTitle.Caption = YLabel
+        If XAxisType = "Log" Then curChartObject.Chart.Axes(xlCategory, xlPrimary).ScaleType = xlScaleLogarithmic
+        If YAxisType = "Log" Then curChartObject.Chart.Axes(xlValue, xlPrimary).ScaleType = xlScaleLogarithmic
+        If CrossAtX <> "" Then curChartObject.Chart.Axes(xlCategory, xlPrimary).CrossAt = CDbl(CrossAtX)
+        If CrossAtY <> "" Then curChartObject.Chart.Axes(xlValue, xlPrimary).CrossAt = CDbl(CrossAtY)
+        If XMin <> "" Then curChartObject.Chart.Axes(xlCategory, xlPrimary).MinmumScale = CDbl(XMin)
+        If YMin <> "" Then curChartObject.Chart.Axes(xlValue, xlPrimary).MinmumScale = CDbl(YMin)
+        If XMax <> "" Then curChartObject.Chart.Axes(xlCategory, xlPrimary).MaxmumScale = CDbl(XMax)
+        If YMax <> "" Then curChartObject.Chart.Axes(xlValue, xlPrimary).MaxmumScale = CDbl(YMax)
+        If HasGridLineX <> "" Then curChartObject.Chart.Axes(xlCategory, xlPrimary).HasGridLine = True
+        If HasGridLineY <> "" Then curChartObject.Chart.Axes(xlValue, xlPrimary).HasGridLine = True
+    Else ' other chart type
+        ' if charttype is not scatter, Y need seperate into multiple columns
+        If iChartType <> -4196 Then
+            For itrLineChart = 2 To wsChartSheet.Cells(1, 1).CurrentRegion.Rows.Count
+                ' judge chart by
+                If Cells(itrLineChart, 1) = Cells(itrLineChart - 1, 1) Then
+                    iColCopy = iColCopy
+                Else
+                    iColCopy = 6
+                End If
+                ' judge series
+                If Cells(itrLineChart, 2) = Cells(itrLineChart - 1, 2) Then
+                    iColCopy = iColCopy
+                Else
+                    iColCopy = iColCopy + 1
+                End If
+                Cells(itrLineChart, iColCopy) = Cells(itrLineChart, 4)
+            Next itrLineChart
+        End If
+        x1Row = 2
+        y1Row = 2
+        x1Col = 3
+        y1Col = 4
+        curChartBy = Cells(2, 1)
+        curSeriesBy = Cells(2, 2)
+        For i = 3 To Cells(1, 3).CurrentRegion.Rows.Count + 1
+            If Cells(i, 1) <> curChartBy Then
+                ' add new chart
+                iChartCnt = wsChartSheet.ChartObjects.Count
+                Set curChartObject = wsChartSheet.ChartObjects.Add(300, 100 + iChartCnt * 300, iWidth, iHeight) ' left, top, width, height
+                curChartObject.Chart.ChartType = iChartType
+                curChartObject.Chart.HasTitle = True
+                curChartObject.Chart.ChartTitle.Characters.Text = curChartBy
+                If XAxisType = "Log" Then curChartObject.Chart.Axes(xlCategory, xlPrimary).ScaleType = xlScaleLogarithmic
+                If YAxisType = "Log" Then curChartObject.Chart.Axes(xlValue, xlPrimary).ScaleType = xlScaleLogarithmic
+                If CrossAtX <> "" Then curChartObject.Chart.Axes(xlCategory, xlPrimary).CrossAt = CDbl(CrossAtX)
+                If CrossAtY <> "" Then curChartObject.Chart.Axes(xlValue, xlPrimary).CrossAt = CDbl(CrossAtY)
+                If XMin <> "" Then curChartObject.Chart.Axes(xlCategory, xlPrimary).MinmumScale = CDbl(XMin)
+                If YMin <> "" Then curChartObject.Chart.Axes(xlValue, xlPrimary).MinmumScale = CDbl(YMin)
+                If XMax <> "" Then curChartObject.Chart.Axes(xlCategory, xlPrimary).MaxmumScale = CDbl(XMax)
+                If YMax <> "" Then curChartObject.Chart.Axes(xlValue, xlPrimary).MaxmumScale = CDbl(YMax)
+                If HasGridLineX <> "" Then curChartObject.Chart.Axes(xlCategory, xlPrimary).HasGridLine = True
+                If HasGridLineY <> "" Then curChartObject.Chart.Axes(xlValue, xlPrimary).HasGridLine = True
+                
+                ' add series of previous chart
+                x2Row = i - 1
+                x2Col = 3
+                y2Row = i - 1
+                For j = 7 To Cells(i - 1, 6).End(xlToRight).Column
+                    ' add each series
+                    y1Col = j
+                    y2Col = j
+                    Set cSer = curChartObject.Chart.SeriesCollection.NewSeries
+                    cSer.XValues = "=" & wsChartSheet.Name & "!" & wsChartSheet.Cells(x1Row, x1Col).Address(ReferenceStyle:=xlR1C1, RowAbsolute:=True, ColumnAbsolute:=True) & ":" & wsChartSheet.Cells(x2Row, x2Col).Address(ReferenceStyle:=xlR1C1, RowAbsolute:=True, ColumnAbsolute:=True)
+                    cSer.Values = "=" & wsChartSheet.Name & "!" & wsChartSheet.Cells(y1Row, y1Col).Address(ReferenceStyle:=xlR1C1, RowAbsolute:=True, ColumnAbsolute:=True) & ":" & wsChartSheet.Cells(y2Row, y2Col).Address(ReferenceStyle:=xlR1C1, RowAbsolute:=True, ColumnAbsolute:=True)
+                    cSer.Name = Cells(Cells(i - 1, j).End(xlUp).Row, 2)
+                    cSer.Format.Line.Weight = 1
+                    cSer.MarkerSize = 8
+                Next j
+                
                 ' set new series start location
                 x1Row = i
                 y1Row = i
                 x1Col = 3
                 y1Col = 4
+                curChartBy = Cells(i, 1)
                 curSeriesBy = Cells(i, 2)
+                
+            Else
+            
             End If
-        End If
-    Next i
-    ' handle last series
-    x2Row = i - 1
-    y2Row = i - 1
-    x2Col = 3
-    y2Col = 4
-    Set cSer = curChartObject.Chart.SeriesCollection.NewSeries
-    cSer.XValues = "=" & wsChartSheet.Name & "!" & wsChartSheet.Cells(x1Row, x1Col).Address(ReferenceStyle:=xlR1C1, RowAbsolute:=True, ColumnAbsolute:=True) & ":" & wsChartSheet.Cells(x2Row, x2Col).Address(ReferenceStyle:=xlR1C1, RowAbsolute:=True, ColumnAbsolute:=True)
-    cSer.Values = "=" & wsChartSheet.Name & "!" & wsChartSheet.Cells(y1Row, y1Col).Address(ReferenceStyle:=xlR1C1, RowAbsolute:=True, ColumnAbsolute:=True) & ":" & wsChartSheet.Cells(y2Row, y2Col).Address(ReferenceStyle:=xlR1C1, RowAbsolute:=True, ColumnAbsolute:=True)
-    cSer.Name = Cells(i - 1, 2)
-    curChartObject.Chart.Axes(xlCategory, xlPrimary).HasTitle = True
-    curChartObject.Chart.Axes(xlCategory, xlPrimary).AxisTitle.Caption = XLabel
-    curChartObject.Chart.Axes(xlValue, xlPrimary).HasTitle = True
-    curChartObject.Chart.Axes(xlValue, xlPrimary).AxisTitle.Caption = YLabel
-    If XAxisType = "Log" Then curChartObject.Chart.Axes(xlCategory, xlPrimary).Type = xlScaleLogarithmic
-    If YAxisType = "Log" Then curChartObject.Chart.Axes(xlValue, xlPrimary).Type = xlScaleLogarithmic
-    If CrossAtX <> "" Then curChartObject.Chart.Axes(xlCategory, xlPrimary).CrossAt = CDbl(CrossAtX)
-    If CrossAtY <> "" Then curChartObject.Chart.Axes(xlValue, xlPrimary).CrossAt = CDbl(CrossAtY)
-    If XMin <> "" Then curChartObject.Chart.Axes(xlCategory, xlPrimary).MinmumScale = CDbl(XMin)
-    If YMin <> "" Then curChartObject.Chart.Axes(xlValue, xlPrimary).MinmumScale = CDbl(YMin)
-    If XMax <> "" Then curChartObject.Chart.Axes(xlCategory, xlPrimary).MaxmumScale = CDbl(XMax)
-    If YMax <> "" Then curChartObject.Chart.Axes(xlValue, xlPrimary).MaxmumScale = CDbl(YMax)
-
+        Next i
+    End If ' handle by chart type
+            
 next_itrSTRow:
 Next itrSTRow
 
