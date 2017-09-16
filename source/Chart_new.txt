@@ -100,6 +100,7 @@ Dim CrossAtX, CrossAtY
 Dim HasGridLineX, HasGridLineY
 Dim itrLineChart
 Dim iColCopy
+Dim LineChartMaxCol
 
 chartSheetPrefix = "chart_"
 
@@ -487,76 +488,33 @@ For itrSTRow = 2 To iSTRowCnt
         If HasGridLineY <> "" Then curChartObject.Chart.Axes(xlValue, xlPrimary).HasGridLine = True
     Else ' other chart type
         ' if charttype is not scatter, Y need seperate into multiple columns
-        If iChartType <> -4196 Then
-            For itrLineChart = 2 To wsChartSheet.Cells(1, 1).CurrentRegion.Rows.Count
-                ' judge chart by
-                If Cells(itrLineChart, 1) = Cells(itrLineChart - 1, 1) Then
-                    iColCopy = iColCopy
-                Else
-                    iColCopy = 6
-                End If
-                ' judge series
-                If Cells(itrLineChart, 2) = Cells(itrLineChart - 1, 2) Then
-                    iColCopy = iColCopy
-                Else
-                    iColCopy = iColCopy + 1
-                End If
-                Cells(itrLineChart, iColCopy) = Cells(itrLineChart, 4)
-            Next itrLineChart
-        End If
-        x1Row = 2
-        y1Row = 2
-        x1Col = 3
-        y1Col = 4
-        curChartBy = Cells(2, 1)
-        curSeriesBy = Cells(2, 2)
-        For i = 3 To Cells(1, 3).CurrentRegion.Rows.Count + 1
-            If Cells(i, 1) <> curChartBy Then
-                ' add new chart
-                iChartCnt = wsChartSheet.ChartObjects.Count
-                Set curChartObject = wsChartSheet.ChartObjects.Add(300, 100 + iChartCnt * 300, iWidth, iHeight) ' left, top, width, height
-                curChartObject.Chart.ChartType = iChartType
-                curChartObject.Chart.HasTitle = True
-                curChartObject.Chart.ChartTitle.Characters.Text = curChartBy
-                If XAxisType = "Log" Then curChartObject.Chart.Axes(xlCategory, xlPrimary).ScaleType = xlScaleLogarithmic
-                If YAxisType = "Log" Then curChartObject.Chart.Axes(xlValue, xlPrimary).ScaleType = xlScaleLogarithmic
-                If CrossAtX <> "" Then curChartObject.Chart.Axes(xlCategory, xlPrimary).CrossAt = CDbl(CrossAtX)
-                If CrossAtY <> "" Then curChartObject.Chart.Axes(xlValue, xlPrimary).CrossAt = CDbl(CrossAtY)
-                If XMin <> "" Then curChartObject.Chart.Axes(xlCategory, xlPrimary).MinmumScale = CDbl(XMin)
-                If YMin <> "" Then curChartObject.Chart.Axes(xlValue, xlPrimary).MinmumScale = CDbl(YMin)
-                If XMax <> "" Then curChartObject.Chart.Axes(xlCategory, xlPrimary).MaxmumScale = CDbl(XMax)
-                If YMax <> "" Then curChartObject.Chart.Axes(xlValue, xlPrimary).MaxmumScale = CDbl(YMax)
-                If HasGridLineX <> "" Then curChartObject.Chart.Axes(xlCategory, xlPrimary).HasGridLine = True
-                If HasGridLineY <> "" Then curChartObject.Chart.Axes(xlValue, xlPrimary).HasGridLine = True
-                
-                ' add series of previous chart
-                x2Row = i - 1
-                x2Col = 3
-                y2Row = i - 1
-                For j = 7 To Cells(i - 1, 6).End(xlToRight).Column
-                    ' add each series
-                    y1Col = j
-                    y2Col = j
-                    Set cSer = curChartObject.Chart.SeriesCollection.NewSeries
-                    cSer.XValues = "=" & wsChartSheet.Name & "!" & wsChartSheet.Cells(x1Row, x1Col).Address(ReferenceStyle:=xlR1C1, RowAbsolute:=True, ColumnAbsolute:=True) & ":" & wsChartSheet.Cells(x2Row, x2Col).Address(ReferenceStyle:=xlR1C1, RowAbsolute:=True, ColumnAbsolute:=True)
-                    cSer.Values = "=" & wsChartSheet.Name & "!" & wsChartSheet.Cells(y1Row, y1Col).Address(ReferenceStyle:=xlR1C1, RowAbsolute:=True, ColumnAbsolute:=True) & ":" & wsChartSheet.Cells(y2Row, y2Col).Address(ReferenceStyle:=xlR1C1, RowAbsolute:=True, ColumnAbsolute:=True)
-                    cSer.Name = Cells(Cells(i - 1, j).End(xlUp).Row, 2)
-                    cSer.Format.Line.Weight = 1
-                    cSer.MarkerSize = 8
-                Next j
-                
-                ' set new series start location
-                x1Row = i
-                y1Row = i
-                x1Col = 3
-                y1Col = 4
-                curChartBy = Cells(i, 1)
-                curSeriesBy = Cells(i, 2)
-                
-            Else
-            
-            End If
-        Next i
+        Range(Cells(2, 7), Cells(Cells(1, 3).CurrentRegion.Rows.Count, 7)).Formula = "=if(" & Cells(2, 1).Address(False, True, xlA1) & "<>" & Cells(1, 1).Address(False, True, xlA1) & ",8,if(" & Cells(2, 2).Address(False, True, xlA1) & "=" & Cells(1, 2).Address(False, False, xlA1) & "," & Cells(1, 7).Address(False, False, xlA1) & "," & Cells(1, 7).Address(False, False, xlA1) & "+1))"
+        LineChartMaxCol = WorksheetFunction.Max(Range(Cells(2, 7), Cells(Cells(1, 3).CurrentRegion.Rows.Count, 7)))
+        Range(Cells(2, 8), Cells(Cells(1, 3).CurrentRegion.Rows.Count, LineChartMaxCol)).Formula = "=if(column()=" & Cells(2, 7).Address(False, True, xlA1) & "," & Cells(2, 4).Address(False, True, xlA1) & ",""B"")"
+        Range(Cells(2, 8), Cells(Cells(1, 3).CurrentRegion.Rows.Count, LineChartMaxCol)).SpecialCells(xlCellTypeFormulas, xlTextValues).ClearContents
+        Range(Cells(2, 7), Cells(Cells(1, 3).CurrentRegion.Rows.Count, LineChartMaxCol)).Select
+        Selection.Copy
+        Selection.PasteSpecial Paste:=xlPasteValues
+        Columns(7).Delete
+        
+        ' For-next loop should be slower than above formula method
+        '    For itrLineChart = 2 To wsChartSheet.Cells(1, 1).CurrentRegion.Rows.Count
+        '        ' judge chart by
+        '        If Cells(itrLineChart, 1) = Cells(itrLineChart - 1, 1) Then
+        '            iColCopy = iColCopy
+        '        Else
+        '            iColCopy = 6
+        '        End If
+        '        ' judge series
+        '        If Cells(itrLineChart, 2) = Cells(itrLineChart - 1, 2) Then
+        '            iColCopy = iColCopy
+        '        Else
+        '            iColCopy = iColCopy + 1
+        '        End If
+        '        Cells(itrLineChart, iColCopy) = Cells(itrLineChart, 4)
+        '    Next itrLineChart
+        
+        Call Chart_trend(ActiveSheet.Name, iChartType, CStr(sChartSetting))
     End If ' handle by chart type
             
 next_itrSTRow:
