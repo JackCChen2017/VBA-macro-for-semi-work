@@ -1,0 +1,95 @@
+Function Chart_customize(curChartObject As ChartObject, sChartSetting As String)
+Dim ChartSettingList
+Dim sChartBy
+Dim sSeriesBy
+Dim XAxisType
+Dim YAxisType
+Dim XMin
+Dim YMin
+Dim XMax
+Dim YMax
+Dim XLabel
+Dim YLabel
+Dim iWidth
+Dim iHeight
+Dim ChartSettingListItem
+Dim tempstr
+Dim HasGridLineX
+Dim HasGridLineY
+Dim CrossAtX
+Dim CrossAtY
+
+' parse chart setting
+ChartSettingList = Split(sChartSetting, ";")
+sChartBy = ""
+sSeriesBy = ""
+XAxisType = ""
+YAxisType = ""
+XMin = ""
+YMin = ""
+XMax = ""
+YMax = ""
+XLabel = ""
+YLabel = ""
+iWidth = 300
+iHeight = 300
+For Each ChartSettingListItem In ChartSettingList
+    tempstr = Split(ChartSettingListItem, ":")
+    Select Case tempstr(0)
+    Case "ChartBy"
+        sChartBy = tempstr(1)
+    Case "SeriesBy"
+        sSeriesBy = tempstr(1)
+    Case "XAxisType"
+        XAxisType = tempstr(1)
+    Case "YAxisType"
+        YAxisType = tempstr(1)
+    Case "XMin"
+        XMin = tempstr(1)
+    Case "YMin"
+        YMin = tempstr(1)
+    Case "XMax"
+        XMax = tempstr(1)
+    Case "YMax"
+        YMax = tempstr(1)
+    Case "XLabel"
+        XLabel = tempstr(1)
+    Case "YLabel"
+        YLabel = tempstr(1)
+    Case "CrossAtX"
+        CrossAtX = tempstr(1)
+    Case "CrossAtY"
+        CrossAtY = tempstr(1)
+    Case "Width"
+        iWidth = tempstr(1)
+    Case "Height"
+        iHeight = tempstr(1)
+    Case "HasGridLineX"
+        HasGridLineX = tempstr(1)
+    Case "HasGridLineY"
+        HasGridLineY = tempstr(1)
+    
+    End Select
+Next ChartSettingListItem
+
+
+If XLabel <> "" Then
+    curChartObject.Chart.Axes(xlCategory, xlPrimary).HasTitle = True
+    curChartObject.Chart.Axes(xlCategory, xlPrimary).AxisTitle.Caption = XLabel
+End If
+If YLabel <> "" Then
+    curChartObject.Chart.Axes(xlValue, xlPrimary).HasTitle = True
+    curChartObject.Chart.Axes(xlValue, xlPrimary).AxisTitle.Caption = YLabel
+End If
+If XAxisType = "Log" Then curChartObject.Chart.Axes(xlCategory, xlPrimary).ScaleType = xlScaleLogarithmic
+If YAxisType = "Log" Then curChartObject.Chart.Axes(xlValue, xlPrimary).ScaleType = xlScaleLogarithmic
+If CrossAtX <> "" Then curChartObject.Chart.Axes(xlCategory, xlPrimary).CrossAt = CDbl(CrossAtX)
+If CrossAtY <> "" Then curChartObject.Chart.Axes(xlValue, xlPrimary).CrossAt = CDbl(CrossAtY)
+If XMin <> "" Then curChartObject.Chart.Axes(xlCategory, xlPrimary).MinmumScale = CDbl(XMin)
+If YMin <> "" Then curChartObject.Chart.Axes(xlValue, xlPrimary).MinmumScale = CDbl(YMin)
+If XMax <> "" Then curChartObject.Chart.Axes(xlCategory, xlPrimary).MaxmumScale = CDbl(XMax)
+If YMax <> "" Then curChartObject.Chart.Axes(xlValue, xlPrimary).MaxmumScale = CDbl(YMax)
+If HasGridLineX <> "" Then curChartObject.Chart.Axes(xlCategory, xlPrimary).HasGridLine = True
+If HasGridLineY <> "" Then curChartObject.Chart.Axes(xlValue, xlPrimary).HasGridLine = True
+
+End Function
