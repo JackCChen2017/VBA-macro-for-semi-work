@@ -101,6 +101,7 @@ Dim HasGridLineX, HasGridLineY
 Dim itrLineChart
 Dim iColCopy
 Dim LineChartMaxCol
+Dim fixLine, fixLineAry, iFixLine, iFixLineCol, iFixLineColEnd
 
 chartSheetPrefix = "chart_"
 
@@ -202,6 +203,8 @@ For itrSTRow = 2 To iSTRowCnt
             sChartBy = tempstr(1)
         Case "SeriesBy"
             sSeriesBy = tempstr(1)
+        Case "FixLine"
+            fixLine = tempstr(1)
         Case "XAxisType"
             XAxisType = tempstr(1)
         Case "YAxisType"
@@ -344,6 +347,20 @@ For itrSTRow = 2 To iSTRowCnt
             ' copy Yname
             wsChartSheet.Activate
             wsChartSheet.Range(Cells(2 + (iRealXYCnt - 1) * (iDSRowCnt - 1), 6), Cells(2 + (iRealXYCnt - 1 + 1) * (iDSRowCnt - 1) - 1, 6)) = ChartYList(itrXY)
+            
+            ' copy fixLine
+            If fixLine <> "" Then
+                fixLineAry = Split(fixLine, ",")
+                For iFixLine = 0 To UBound(fixLineAry)
+                    iFixLineCol = 0
+                    iFixLineCol = FindColNumByName(sDataSheet, iDSHeaderCnt, CStr(fixLineAry(iFixLine)))
+                    If iFixLineCol > 0 Then
+                        wsChartSheet.Cells(1, 7 + iFixLine) = CStr(fixLineAry(iFixLine))
+                        wsDS.Activate
+                        wsDS.Range(Cells(2, iFixLineCol), Cells(iDSRowCnt, iFixLineCol)).Copy Destination:=wsChartSheet.Cells(2 + (iRealXYCnt - 1) * (iDSRowCnt - 1), 7 + iFixLine)
+                    End If
+                Next iFixLine
+            End If
         End If ' X and Y is valid
     Next itrXY
     
@@ -416,10 +433,10 @@ For itrSTRow = 2 To iSTRowCnt
                 curChartObject.Chart.Axes(xlValue, xlPrimary).AxisTitle.Caption = YLabel
                 If XAxisType = "Log" Then curChartObject.Chart.Axes(xlCategory, xlPrimary).ScaleType = xlScaleLogarithmic
                 If YAxisType = "Log" Then curChartObject.Chart.Axes(xlValue, xlPrimary).ScaleType = xlScaleLogarithmic
-                If CrossAtX <> "" Then curChartObject.Chart.Axes(xlCategory, xlPrimary).CrossAt = CDbl(CrossAtX)
-                If CrossAtY <> "" Then curChartObject.Chart.Axes(xlValue, xlPrimary).CrossAt = CDbl(CrossAtY)
-                If XMin <> "" Then curChartObject.Chart.Axes(xlCategory, xlPrimary).MinmumScale = CDbl(XMin)
-                If YMin <> "" Then curChartObject.Chart.Axes(xlValue, xlPrimary).MinmumScale = CDbl(YMin)
+                If CrossAtX <> "" Then curChartObject.Chart.Axes(xlCategory, xlPrimary).CrossesAt = CDbl(CrossAtX)
+                If CrossAtY <> "" Then curChartObject.Chart.Axes(xlValue, xlPrimary).CrossesAt = CDbl(CrossAtY)
+                If XMin <> "" Then curChartObject.Chart.Axes(xlCategory, xlPrimary).MinimumScale = CDbl(XMin)
+                If YMin <> "" Then curChartObject.Chart.Axes(xlValue, xlPrimary).MinimumScale = CDbl(YMin)
                 If XMax <> "" Then curChartObject.Chart.Axes(xlCategory, xlPrimary).MaxmumScale = CDbl(XMax)
                 If YMax <> "" Then curChartObject.Chart.Axes(xlValue, xlPrimary).MaxmumScale = CDbl(YMax)
                 If HasGridLineX <> "" Then curChartObject.Chart.Axes(xlCategory, xlPrimary).HasGridLine = True
@@ -478,24 +495,25 @@ For itrSTRow = 2 To iSTRowCnt
         curChartObject.Chart.Axes(xlValue, xlPrimary).AxisTitle.Caption = YLabel
         If XAxisType = "Log" Then curChartObject.Chart.Axes(xlCategory, xlPrimary).ScaleType = xlScaleLogarithmic
         If YAxisType = "Log" Then curChartObject.Chart.Axes(xlValue, xlPrimary).ScaleType = xlScaleLogarithmic
-        If CrossAtX <> "" Then curChartObject.Chart.Axes(xlCategory, xlPrimary).CrossAt = CDbl(CrossAtX)
-        If CrossAtY <> "" Then curChartObject.Chart.Axes(xlValue, xlPrimary).CrossAt = CDbl(CrossAtY)
-        If XMin <> "" Then curChartObject.Chart.Axes(xlCategory, xlPrimary).MinmumScale = CDbl(XMin)
-        If YMin <> "" Then curChartObject.Chart.Axes(xlValue, xlPrimary).MinmumScale = CDbl(YMin)
+        If CrossAtX <> "" Then curChartObject.Chart.Axes(xlCategory, xlPrimary).CrossesAt = CDbl(CrossAtX)
+        If CrossAtY <> "" Then curChartObject.Chart.Axes(xlValue, xlPrimary).CrossesAt = CDbl(CrossAtY)
+        If XMin <> "" Then curChartObject.Chart.Axes(xlCategory, xlPrimary).MinimumScale = CDbl(XMin)
+        If YMin <> "" Then curChartObject.Chart.Axes(xlValue, xlPrimary).MinimumScale = CDbl(YMin)
         If XMax <> "" Then curChartObject.Chart.Axes(xlCategory, xlPrimary).MaxmumScale = CDbl(XMax)
         If YMax <> "" Then curChartObject.Chart.Axes(xlValue, xlPrimary).MaxmumScale = CDbl(YMax)
         If HasGridLineX <> "" Then curChartObject.Chart.Axes(xlCategory, xlPrimary).HasGridLine = True
         If HasGridLineY <> "" Then curChartObject.Chart.Axes(xlValue, xlPrimary).HasGridLine = True
     Else ' other chart type
         ' if charttype is not scatter, Y need seperate into multiple columns
-        Range(Cells(2, 7), Cells(Cells(1, 3).CurrentRegion.Rows.Count, 7)).Formula = "=if(" & Cells(2, 1).Address(False, True, xlA1) & "<>" & Cells(1, 1).Address(False, True, xlA1) & ",8,if(" & Cells(2, 2).Address(False, True, xlA1) & "=" & Cells(1, 2).Address(False, False, xlA1) & "," & Cells(1, 7).Address(False, False, xlA1) & "," & Cells(1, 7).Address(False, False, xlA1) & "+1))"
-        LineChartMaxCol = WorksheetFunction.Max(Range(Cells(2, 7), Cells(Cells(1, 3).CurrentRegion.Rows.Count, 7)))
-        Range(Cells(2, 8), Cells(Cells(1, 3).CurrentRegion.Rows.Count, LineChartMaxCol)).Formula = "=if(column()=" & Cells(2, 7).Address(False, True, xlA1) & "," & Cells(2, 4).Address(False, True, xlA1) & ",""B"")"
-        Range(Cells(2, 8), Cells(Cells(1, 3).CurrentRegion.Rows.Count, LineChartMaxCol)).SpecialCells(xlCellTypeFormulas, xlTextValues).ClearContents
-        Range(Cells(2, 7), Cells(Cells(1, 3).CurrentRegion.Rows.Count, LineChartMaxCol)).Select
+        iFixLineColEnd = Cells(1, 3).End(xlToRight).Column()
+        Range(Cells(2, iFixLineColEnd + 1), Cells(Cells(1, 3).CurrentRegion.Rows.Count, iFixLineColEnd + 1)).Formula = "=if(" & Cells(2, 1).Address(False, True, xlA1) & "<>" & Cells(1, 1).Address(False, True, xlA1) & "," & CStr(iFixLineColEnd + 2) & ",if(" & Cells(2, 2).Address(False, True, xlA1) & "=" & Cells(1, 2).Address(False, False, xlA1) & "," & Cells(1, iFixLineColEnd + 1).Address(False, False, xlA1) & "," & Cells(1, iFixLineColEnd + 1).Address(False, False, xlA1) & "+1))"
+        LineChartMaxCol = WorksheetFunction.Max(Range(Cells(2, iFixLineColEnd + 1), Cells(Cells(1, 3).CurrentRegion.Rows.Count, iFixLineColEnd + 1)))
+        Range(Cells(2, iFixLineColEnd + 2), Cells(Cells(1, 3).CurrentRegion.Rows.Count, LineChartMaxCol)).Formula = "=if(column()=" & Cells(2, iFixLineColEnd + 1).Address(False, True, xlA1) & "," & Cells(2, 4).Address(False, True, xlA1) & ",""B"")"
+        Range(Cells(2, iFixLineColEnd + 2), Cells(Cells(1, 3).CurrentRegion.Rows.Count, LineChartMaxCol)).SpecialCells(xlCellTypeFormulas, xlTextValues).ClearContents
+        Range(Cells(2, iFixLineColEnd + 1), Cells(Cells(1, 3).CurrentRegion.Rows.Count, LineChartMaxCol)).Select
         Selection.Copy
         Selection.PasteSpecial Paste:=xlPasteValues
-        Columns(7).Delete
+        Columns(iFixLineColEnd + 1).Delete
         
         ' For-next loop should be slower than above formula method
         '    For itrLineChart = 2 To wsChartSheet.Cells(1, 1).CurrentRegion.Rows.Count

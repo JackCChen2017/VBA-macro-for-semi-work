@@ -36,14 +36,18 @@ For i = 3 To Cells(1, 3).CurrentRegion.Rows.Count + 1
         x2Row = i - 1
         x2Col = 3
         y2Row = i - 1
-        For j = 7 To Cells(i - 1, 6).End(xlToRight).Column
+        For j = 7 To Cells(i - 1, Cells(1, 3).End(xlToRight).Column()).End(xlToRight).Column
             ' add each series
             y1Col = j
             y2Col = j
             Set cSer = curChartObject.Chart.SeriesCollection.NewSeries
             cSer.XValues = "=" & wsChartSheet.Name & "!" & wsChartSheet.Cells(x1Row, x1Col).Address(ReferenceStyle:=xlR1C1, RowAbsolute:=True, ColumnAbsolute:=True) & ":" & wsChartSheet.Cells(x2Row, x2Col).Address(ReferenceStyle:=xlR1C1, RowAbsolute:=True, ColumnAbsolute:=True)
             cSer.Values = "=" & wsChartSheet.Name & "!" & wsChartSheet.Cells(y1Row, y1Col).Address(ReferenceStyle:=xlR1C1, RowAbsolute:=True, ColumnAbsolute:=True) & ":" & wsChartSheet.Cells(y2Row, y2Col).Address(ReferenceStyle:=xlR1C1, RowAbsolute:=True, ColumnAbsolute:=True)
-            cSer.Name = Cells(Cells(i - 1, j).End(xlUp).Row, 2)
+            If Cells(1, j) <> "" Then
+                cSer.Name = Cells(1, j) ' fixLine
+            Else
+                cSer.Name = Cells(Cells(i - 1, j).End(xlUp).Row, 2) ' normal Y
+            End If
             cSer.Format.Line.Weight = 1
             cSer.MarkerSize = 5
         Next j
