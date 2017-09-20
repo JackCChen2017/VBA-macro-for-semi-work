@@ -45,7 +45,7 @@ For i = 3 To Cells(1, 3).CurrentRegion.Rows.Count + 1
             cSer.Values = "=" & wsChartSheet.Name & "!" & wsChartSheet.Cells(y1Row, y1Col).Address(ReferenceStyle:=xlR1C1, RowAbsolute:=True, ColumnAbsolute:=True) & ":" & wsChartSheet.Cells(y2Row, y2Col).Address(ReferenceStyle:=xlR1C1, RowAbsolute:=True, ColumnAbsolute:=True)
             If Cells(1, j) <> "" Then
                 cSer.Name = Cells(1, j) ' fixLine
-                cSer.MarkerStyle = xlMarkerNone
+                cSer.MarkerStyle = xlMarkerStyleNone
             Else
                 cSer.Name = Cells(Cells(i - 1, j).End(xlUp).Row, 2) ' normal Y
                 cSer.MarkerStyle = xlMarkerStyleAutomatic
