@@ -1,0 +1,68 @@
+Function Chart_series_customize(arg As String)
+Dim ArgList
+Dim argListItem
+Dim tempstr
+Dim sDataSheet As String
+Dim sChartName
+Dim sSeriesName
+Dim sMarkerStyle
+Dim sMarkerSize
+Dim sMarkerBackgroundColor
+Dim sMarkerForegroundColor
+Dim sLineWeight
+Dim sLineForeColor
+Dim sLineStyle
+Dim sLineDashStyle
+Dim wsOut
+Dim itrChartObject
+Dim itrSeries
+
+ArgList = Split(arg, ";")
+
+For Each argListItem In ArgList
+    tempstr = Split(argListItem, ":")
+    Select Case tempstr(0)
+    Case "DataSheetName"
+        sDataSheet = tempstr(1)
+    Case "ChartName"
+        sChartName = tempstr(1)
+    Case "SeriesName"
+        sSeriesName = tempstr(1)
+    Case "MarkerStyle"
+        sMarkerStyle = tempstr(1)
+    Case "MarkerSize"
+        sMarkerSize = tempstr(1)
+    Case "MarkerBackgroundColor"
+        sMarkerBackgroundColor = tempstr(1)
+    Case "MarkerForegroundColor"
+        sMarkerForegroundColor = tempstr(1)
+    Case "LineWeight"
+        sLineWeight = tempstr(1)
+    Case "LineForeColor"
+        sLineForeColor = tempstr(1)
+    Case "LineStyle"
+        sLineStyle = tempstr(1)
+    Case "LineDashStyle"
+        sLineDashStyle = tempstr(1)
+    
+    'Case "SeriesBy"
+    '    SeriesByColName = tempstr(1)
+    'Case "ChartBy"
+    '    ChartByColName = tempstr(1)
+    'Case "OutSheetName"
+        'outSheetName=tempstr(1)
+    End Select
+Next argListItem
+
+Set wsOut = Worksheets(sDataSheet)
+For Each itrChartObject In wsOut.ChartObjects
+    If Regex_check(sChartName, itrChartObject.Chart.Name) Then
+        For Each itrSeries In itrChartObject.Chart.SeriesCollection
+            If Regex_check(sSeriesName, itrSeries.Name) Then
+                If sLineStyle <> "" Then itrSeries.Format.Line.LineStyle = sLineStyle
+            End If
+        Next 'series
+    End If
+Next ' chart object
+
+End Function
