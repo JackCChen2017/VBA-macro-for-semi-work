@@ -1,0 +1,96 @@
+Function Ppt_import_picture(arg As String) As Integer
+Dim ArgList
+Dim argListItem
+Dim tempstr
+Dim pptApplication As PowerPoint.Application
+Dim activeSlide As PowerPoint.Slide
+Dim X, Y, W, H
+Dim curXlsPic
+Dim curPic
+Dim curDir
+
+curDir = ActiveWorkbook.Path & "\"
+
+ArgList = Split(arg, ";")
+
+For Each argListItem In ArgList
+tempstr = Split(argListItem, ":")
+Select Case tempstr(0)
+'Case "Filepath"
+'    sFilepath = tempstr(1)
+Case "PptFilename"
+    pptFilename = tempstr(1)
+Case "XlsFilename"
+    xlsFilename = tempstr(1)
+Case "PicFilename"
+    PicFilename = tempstr(1)
+Case "PptSlideNumber" ' title slide's number is 1
+    pptSlideNumber = tempstr(1)
+Case "PicFolderName"
+    PicFolderName = tempstr(1)
+Case "X"
+    X = tempstr(1)
+Case "Y"
+    Y = tempstr(1)
+Case "W"
+    W = tempstr(1)
+Case "H"
+    H = tempstr(1)
+Case "ChartArrange"
+    ChartArrange = tempstr(1)
+End Select
+Next argListItem
+
+'Look for existing instance
+On Error Resume Next
+    Set pptApplication = GetObject(, "PowerPoint.Application")
+On Error GoTo 0
+     
+'Let's create a new PowerPoint
+If pptApplication Is Nothing Then
+    Set pptApplication = New PowerPoint.Application
+End If
+
+Set curPresentation = pptApplication.Presentations(pptFilename)
+
+If xlsFilename = "ActiveWorkbook" Then
+    Set wb = ActiveWorkbook
+Else
+    Set wb = Workbooks(xlsFilename)
+End If
+
+Set ws = wb.ActiveSheet
+
+If CInt(pptSlideNumber) > 0 Then
+    Set curSlide = curPresentation.Slides(CInt(pptSlideNumber))
+Else
+    Set curSlide = curPresentation.Slides.Add(curPresentation.Slides.Count + 1, ppLayoutTitle)
+End If
+
+If PicFolderName <> "" Then curDir = PicFolderName
+
+Set curXlsPic = ws.Pictures.Insert(curDir & PicFilename)
+        curXlsPic.CopyPicture
+        Set curPic = curSlide.Shapes.Paste
+        
+        If X <> "" Then
+            curPic.Left = CDbl(X) / 3.528 * 100
+        End If
+        
+        If Y <> "" Then
+            curPic.Top = CDbl(Y) / 3.528 * 100
+        End If
+        
+        curPic.LockAspectRatio = msoFalse
+        If W <> "" Then
+            curPic.Width = CDbl(W) / 3.528 * 100 ' 100 is 3.528cm for width
+        End If
+        
+        If H <> "" Then
+            curPic.Height = CDbl(H) / 3.528 * 100 ' 100 is 3.528cm for height
+        End If
+curXlsPic.Delete
+
+Set pptApplication = Nothing
+
+End Function
