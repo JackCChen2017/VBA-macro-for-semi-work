@@ -18,6 +18,7 @@ Dim HasGridLineX
 Dim HasGridLineY
 Dim CrossAtX
 Dim CrossAtY
+Dim PlotAreaLine
 
 ' parse chart setting
 ChartSettingList = Split(sChartSetting, ";")
@@ -68,7 +69,8 @@ For Each ChartSettingListItem In ChartSettingList
         HasGridLineX = tempstr(1)
     Case "HasGridLineY"
         HasGridLineY = tempstr(1)
-    
+    Case "PlotAreaLine"
+        PlotAreaLine = tempstr(1)
     End Select
 Next ChartSettingListItem
 
@@ -91,5 +93,9 @@ If XMax <> "" Then curChartObject.Chart.Axes(xlCategory, xlPrimary).MaxmumScale 
 If YMax <> "" Then curChartObject.Chart.Axes(xlValue, xlPrimary).MaxmumScale = CDbl(YMax)
 If HasGridLineX <> "" Then curChartObject.Chart.Axes(xlCategory, xlPrimary).HasGridLine = True
 If HasGridLineY <> "" Then curChartObject.Chart.Axes(xlValue, xlPrimary).HasGridLine = True
+If PlotAreaLine <> "" Then
+    curChartObject.Chart.PlotArea.Format.Line.Visible = msoTrue
+    curChartObject.Chart.PlotArea.Format.Line.ForeColor.ObjectThemeColor = msoThemeColorAccent1
+End If
 
 End Function
