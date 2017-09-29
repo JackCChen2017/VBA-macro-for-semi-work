@@ -95,7 +95,7 @@ If HasGridLineX <> "" Then curChartObject.Chart.Axes(xlCategory, xlPrimary).HasG
 If HasGridLineY <> "" Then curChartObject.Chart.Axes(xlValue, xlPrimary).HasGridLine = True
 If PlotAreaLine <> "" Then
     curChartObject.Chart.PlotArea.Format.Line.Visible = msoTrue
-    curChartObject.Chart.PlotArea.Format.Line.ForeColor.ObjectThemeColor = msoThemeColorAccent1
+    curChartObject.Chart.PlotArea.Format.Line.ForeColor.ObjectThemeColor = RGB(255,255,255)
 End If
 
 End Function
