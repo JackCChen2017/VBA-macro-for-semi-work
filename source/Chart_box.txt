@@ -1,0 +1,60 @@
+Function Chart_box(sChartSheet As String, iChartType As Variant, sChartSetting As String)
+' this function request data formated as Chart_new
+Dim wsChartSheet
+Dim x1Row, x1Col ' series X start cell
+Dim x2Row, x2Col ' series X end cell
+Dim y1Row, y1Col ' series Y start cell
+Dim y2Row, y2Col ' series Y end cell
+Dim curChartBy
+Dim curSeriesBy
+Dim i
+Dim iChartCnt
+Dim curChartObject As ChartObject
+Dim j
+Dim cSer
+
+Worksheets(sChartSheet).Activate
+Set wsChartSheet = Worksheets(sChartSheet)
+
+x1Row = 2
+x1Col = 9
+x2Col = 9
+y1Row = 2
+curChartBy = Cells(2, 8)
+For i = 3 To Cells(1, 8).CurrentRegion.Rows.Count + 1
+    If Cells(i, 8) <> curChartBy Then
+        ' add new chart
+        iChartCnt = wsChartSheet.ChartObjects.Count
+        Set curChartObject = wsChartSheet.ChartObjects.Add(300, 100 + iChartCnt * 300, 500, 300) ' left, top, width, height
+        curChartObject.Chart.ChartType = iChartType
+        curChartObject.Chart.HasTitle = True
+        curChartObject.Chart.ChartTitle.Characters.Text = curChartBy
+        Call Chart_customize(curChartObject, sChartSetting)
+        
+        ' add series
+        x2Row = i - 1
+        y2Row = i - 1
+        For j = 10 To 15
+            ' add each series
+            y1Col = j
+            y2Col = j
+            Set cSer = curChartObject.Chart.SeriesCollection.NewSeries
+            cSer.XValues = "=" & wsChartSheet.Name & "!" & wsChartSheet.Cells(x1Row, x1Col).Address(ReferenceStyle:=xlR1C1, RowAbsolute:=True, ColumnAbsolute:=True) & ":" & wsChartSheet.Cells(x2Row, x2Col).Address(ReferenceStyle:=xlR1C1, RowAbsolute:=True, ColumnAbsolute:=True)
+            cSer.Values = "=" & wsChartSheet.Name & "!" & wsChartSheet.Cells(y1Row, y1Col).Address(ReferenceStyle:=xlR1C1, RowAbsolute:=True, ColumnAbsolute:=True) & ":" & wsChartSheet.Cells(y2Row, y2Col).Address(ReferenceStyle:=xlR1C1, RowAbsolute:=True, ColumnAbsolute:=True)
+            cSer.Name = Cells(1, j)
+            cSer.MarkerStyle = xlMarkerStyleNone
+            cSer.Format.Line.Visible = msoFalse
+            
+        Next j
+        curChartObject.Chart.SetElement (msoElementUpDownBarsShow) ' add bar
+        curChartObject.Chart.SetElement (msoElementLineHiLoLine) ' add line
+        curChartObject.Chart.Legend.Delete ' delete legend because all series's marker and line are removed
+        
+        ' set new series start location
+        x1Row = i
+        y1Row = i
+        curChartBy = Cells(i, 8)
+    End If
+Next i
+
+End Function
