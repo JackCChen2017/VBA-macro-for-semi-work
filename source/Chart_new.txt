@@ -92,7 +92,7 @@ Dim itrSeriesByColNum
 Dim arrayChartByColNum As Variant
 Dim arraySeriesByColNum As Variant
 Dim iChartType
-Dim chartSheetPrefix
+Dim chartSheetPrefix As String
 Dim iWidth
 Dim iHeight
 Dim CrossAtX, CrossAtY
@@ -101,6 +101,8 @@ Dim itrLineChart
 Dim iColCopy
 Dim LineChartMaxCol
 Dim fixLine, fixLineAry, iFixLine, iFixLineCol, iFixLineColEnd
+Dim iChartAndX ' CharBy and X combination for Box chart
+Dim curX
 
 chartSheetPrefix = "chart_"
 
@@ -164,6 +166,8 @@ For itrSTRow = 2 To iSTRowCnt
     Case "Line"
         iChartType = 4
     Case "LineMarker"
+        iChartType = 65
+    Case "Box"
         iChartType = 65
     End Select
 
@@ -333,6 +337,7 @@ For itrSTRow = 2 To iSTRowCnt
             ' ChartBy,SeriesBy defined: Yes,No
             wsChartSheet.Sort.SortFields.Clear
             wsChartSheet.Sort.SortFields.Add Key:=Cells(1, 1), SortOn:=xlSortOnValues, Order:=xlAscending, DataOption:=xlSortNormal
+            wsChartSheet.Cells(1, 2) = "NoSeriesBy"
         End If
     Else
         If sSeriesBy <> "" Then
@@ -357,7 +362,7 @@ For itrSTRow = 2 To iSTRowCnt
     End With
     
     ' add chart, handle is different by chart type
-    If iChartType = -4169 Then
+    If sChartType = "Scatter" Then
         ' chart type is scatter (-4169)
         ' Add Chart
         curChartBy = Cells(2, 1)
@@ -367,6 +372,7 @@ For itrSTRow = 2 To iSTRowCnt
         curChartObject.Chart.ChartType = iChartType
         curChartObject.Chart.HasTitle = True
         curChartObject.Chart.ChartTitle.Characters.Text = curChartBy
+        If sChartTitle <> "" Then curChartObject.Chart.ChartTitle.Characters.Text = sChartTitle & " for " & curChartBy
     
         x1Row = 2
         y1Row = 2
@@ -400,6 +406,7 @@ For itrSTRow = 2 To iSTRowCnt
                 curChartObject.Chart.ChartType = iChartType
                 curChartObject.Chart.HasTitle = True
                 curChartObject.Chart.ChartTitle.Characters.Text = curChartBy
+                If sChartTitle <> "" Then curChartObject.Chart.ChartTitle.Characters.Text = sChartTitle & " for " & curChartBy
             Else
                 ' not new chart, only new series
                 If Cells(i, 2) <> curSeriesBy Then
@@ -433,8 +440,58 @@ For itrSTRow = 2 To iSTRowCnt
         cSer.Values = "=" & wsChartSheet.Name & "!" & wsChartSheet.Cells(y1Row, y1Col).Address(ReferenceStyle:=xlR1C1, RowAbsolute:=True, ColumnAbsolute:=True) & ":" & wsChartSheet.Cells(y2Row, y2Col).Address(ReferenceStyle:=xlR1C1, RowAbsolute:=True, ColumnAbsolute:=True)
         cSer.Name = Cells(i - 1, 2)
         Call Chart_customize(curChartObject, sChartSetting)
+    ElseIf sChartType = "Box" Then
+        ' prepare the data first
+        Cells(1, 8) = Cells(1, 1)
+        Cells(1, 9) = Cells(1, 3)
+        Cells(1, 10) = "25 percentile"
+        Cells(1, 11) = "Min"
+        Cells(1, 12) = "Median"
+        Cells(1, 13) = "Mean"
+        Cells(1, 14) = "Max"
+        Cells(1, 15) = "75 percentile"
+        
+        iChartAndX = 1 'counter for ChartBy-X combination
+        
+        curChartBy = Cells(2, 1)
+        curX = Cells(2, 3)
+        
+        x1Row = 2
+        x1Col = 3
+        y1Row = 2
+        y1Col = 4
+        For i = 3 To Cells(1, 3).CurrentRegion.Rows.Count + 1
+            If Cells(i, 1) <> curChartBy Or Cells(i, 3) <> curX Then
+                ' calculate new X's 25%,Min,Median,Max,75%
+                x2Row = i - 1
+                x2Col = 3
+                y2Row = i - 1
+                y2Col = 4
+                iChartAndX = iChartAndX + 1
+                Cells(iChartAndX, 8) = curChartBy
+                Cells(iChartAndX, 9) = curX
+                Cells(iChartAndX, 10) = WorksheetFunction.Percentile(Range(Cells(y1Row, y1Col), Cells(y2Row, y2Col)), 0.25)
+                Cells(iChartAndX, 11) = WorksheetFunction.Min(Range(Cells(y1Row, y1Col), Cells(y2Row, y2Col)))
+                Cells(iChartAndX, 12) = WorksheetFunction.Percentile(Range(Cells(y1Row, y1Col), Cells(y2Row, y2Col)), 0.5)
+                Cells(iChartAndX, 13) = WorksheetFunction.Average(Range(Cells(y1Row, y1Col), Cells(y2Row, y2Col)))
+                Cells(iChartAndX, 14) = WorksheetFunction.Max(Range(Cells(y1Row, y1Col), Cells(y2Row, y2Col)))
+                Cells(iChartAndX, 15) = WorksheetFunction.Percentile(Range(Cells(y1Row, y1Col), Cells(y2Row, y2Col)), 0.75)
+                                
+                ' set new Chart and X start location
+                x1Row = i
+                x1Col = 3
+                y1Row = i
+                y1Col = 4
+                curChartBy = Cells(i, 1)
+                curX = Cells(i, 3)
+            End If
+        Next i
+        
+        
+        ' draw the box chart
+        Call Chart_box(ActiveSheet.Name, iChartType, CStr(sChartSetting))
     Else ' other chart type
-        ' if charttype is not scatter, Y need seperate into multiple columns
+        ' if charttype is not scatter or Box, Y need seperate into multiple columns
         iFixLineColEnd = Cells(1, 3).End(xlToRight).Column()
         Range(Cells(2, iFixLineColEnd + 1), Cells(Cells(1, 3).CurrentRegion.Rows.Count, iFixLineColEnd + 1)).Formula = "=if(" & Cells(2, 1).Address(False, True, xlA1) & "<>" & Cells(1, 1).Address(False, True, xlA1) & "," & CStr(iFixLineColEnd + 2) & ",if(" & Cells(2, 2).Address(False, True, xlA1) & "=" & Cells(1, 2).Address(False, False, xlA1) & "," & Cells(1, iFixLineColEnd + 1).Address(False, False, xlA1) & "," & Cells(1, iFixLineColEnd + 1).Address(False, False, xlA1) & "+1))"
         LineChartMaxCol = WorksheetFunction.Max(Range(Cells(2, iFixLineColEnd + 1), Cells(Cells(1, 3).CurrentRegion.Rows.Count, iFixLineColEnd + 1)))
