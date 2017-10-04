@@ -95,7 +95,11 @@ If HasGridLineX <> "" Then curChartObject.Chart.Axes(xlCategory, xlPrimary).HasG
 If HasGridLineY <> "" Then curChartObject.Chart.Axes(xlValue, xlPrimary).HasGridLine = True
 If PlotAreaLine <> "" Then
     curChartObject.Chart.PlotArea.Format.Line.Visible = msoTrue
-    curChartObject.Chart.PlotArea.Format.Line.ForeColor.RGB = RGB(255,255,255)
+    If Len(PlotAreaLine) = 9 Then
+        curChartObject.Chart.PlotArea.Format.Line.ForeColor.RGB = RGB(CInt(Left(PlotAreaLine, 3)), CInt(Mid(PlotAreaLine, 4, 3)), CInt(Mid(PlotAreaLine, 7, 3)))
+    Else
+        curChartObject.Chart.PlotArea.Format.Line.ForeColor.RGB = RGB(0, 0, 0)
+    End If
 End If
 
 End Function
