@@ -1,0 +1,48 @@
+Function Chart_customize_by_title(arg As String)
+Dim ArgList
+Dim argListItem
+Dim tempstr
+Dim sDataSheet As String
+Dim sChartName
+Dim sSeriesName
+Dim sMarkerStyle
+Dim sMarkerSize
+Dim sMarkerBackgroundColor
+Dim sMarkerForegroundColor
+Dim sLineWeight
+Dim sLineForeColor
+Dim sLineStyle
+Dim sLineDashStyle
+Dim wsOut
+Dim itrChartObject
+Dim itrSeries
+Dim ChartSetting
+Dim curChartObject As ChartObject
+
+ArgList = Split(arg, ";")
+
+For Each argListItem In ArgList
+    tempstr = Split(argListItem, ":")
+    Select Case tempstr(0)
+    Case "DataSheetName"
+        sDataSheet = tempstr(1)
+    Case "ChartName"
+        sChartName = tempstr(1)
+    Case "ChartSetting"
+        ChartSetting = tempstr(1)
+    End Select
+Next argListItem
+
+Dim realSetting As String
+realSetting = Replace(ChartSetting, "##", ";")
+realSetting = Replace(realSetting, "#", ":")
+
+Set wsOut = Worksheets(sDataSheet)
+For Each itrChartObject In wsOut.ChartObjects
+    If Regex_check(sChartName, itrChartObject.Chart.ChartTitle.Caption) Then
+        Set curChartObject = itrChartObject
+        Call Chart_customize(curChartObject, realSetting)
+    End If
+Next ' chart object
+
+End Function
