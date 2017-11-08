@@ -89,8 +89,8 @@ If CrossAtX <> "" Then curChartObject.Chart.Axes(xlCategory, xlPrimary).CrossesA
 If CrossAtY <> "" Then curChartObject.Chart.Axes(xlValue, xlPrimary).CrossesAt = CDbl(CrossAtY)
 If XMin <> "" Then curChartObject.Chart.Axes(xlCategory, xlPrimary).MinimumScale = CDbl(XMin)
 If YMin <> "" Then curChartObject.Chart.Axes(xlValue, xlPrimary).MinimumScale = CDbl(YMin)
-If XMax <> "" Then curChartObject.Chart.Axes(xlCategory, xlPrimary).MaxmumScale = CDbl(XMax)
-If YMax <> "" Then curChartObject.Chart.Axes(xlValue, xlPrimary).MaxmumScale = CDbl(YMax)
+If XMax <> "" Then curChartObject.Chart.Axes(xlCategory, xlPrimary).MaximumScale = CDbl(XMax)
+If YMax <> "" Then curChartObject.Chart.Axes(xlValue, xlPrimary).MaximumScale = CDbl(YMax)
 If HasGridLineX <> "" Then curChartObject.Chart.Axes(xlCategory, xlPrimary).HasGridLine = True
 If HasGridLineY <> "" Then curChartObject.Chart.Axes(xlValue, xlPrimary).HasGridLine = True
 If PlotAreaLine <> "" Then
