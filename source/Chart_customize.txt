@@ -85,8 +85,20 @@ If YLabel <> "" Then
 End If
 If XAxisType = "Log" Then curChartObject.Chart.Axes(xlCategory, xlPrimary).ScaleType = xlScaleLogarithmic
 If YAxisType = "Log" Then curChartObject.Chart.Axes(xlValue, xlPrimary).ScaleType = xlScaleLogarithmic
-If CrossAtX <> "" Then curChartObject.Chart.Axes(xlCategory, xlPrimary).CrossesAt = CDbl(CrossAtX)
-If CrossAtY <> "" Then curChartObject.Chart.Axes(xlValue, xlPrimary).CrossesAt = CDbl(CrossAtY)
+If CrossAtX <> "" Then
+    If CrossAtX = "XMin" Then
+        curChartObject.Chart.Axes(xlCategory, xlPrimary).CrossesAt = curChartObject.Chart.Axes(xlCategory, xlPrimary).MinimumScale
+    Else
+        curChartObject.Chart.Axes(xlCategory, xlPrimary).CrossesAt = CDbl(CrossAtX)
+    End If
+End If
+If CrossAtY <> "" Then
+    If CrossAtY = "YMin" Then
+        curChartObject.Chart.Axes(xlValue, xlPrimary).CrossesAt = curChartObject.Chart.Axes(xlValue, xlPrimary).MinimumScale
+    Else
+        curChartObject.Chart.Axes(xlValue, xlPrimary).CrossesAt = CDbl(CrossAtY)
+    End If
+End If
 If XMin <> "" Then curChartObject.Chart.Axes(xlCategory, xlPrimary).MinimumScale = CDbl(XMin)
 If YMin <> "" Then curChartObject.Chart.Axes(xlValue, xlPrimary).MinimumScale = CDbl(YMin)
 If XMax <> "" Then curChartObject.Chart.Axes(xlCategory, xlPrimary).MaximumScale = CDbl(XMax)
