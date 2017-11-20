@@ -86,14 +86,14 @@ End If
 If XAxisType = "Log" Then curChartObject.Chart.Axes(xlCategory, xlPrimary).ScaleType = xlScaleLogarithmic
 If YAxisType = "Log" Then curChartObject.Chart.Axes(xlValue, xlPrimary).ScaleType = xlScaleLogarithmic
 If CrossAtX <> "" Then
-    If CrossAtX = "XMin" Then
+    If CrossAtX = "Xmin" Then
         curChartObject.Chart.Axes(xlCategory, xlPrimary).CrossesAt = curChartObject.Chart.Axes(xlCategory, xlPrimary).MinimumScale
     Else
         curChartObject.Chart.Axes(xlCategory, xlPrimary).CrossesAt = CDbl(CrossAtX)
     End If
 End If
 If CrossAtY <> "" Then
-    If CrossAtY = "YMin" Then
+    If CrossAtY = "Ymin" Then
         curChartObject.Chart.Axes(xlValue, xlPrimary).CrossesAt = curChartObject.Chart.Axes(xlValue, xlPrimary).MinimumScale
     Else
         curChartObject.Chart.Axes(xlValue, xlPrimary).CrossesAt = CDbl(CrossAtY)
@@ -103,6 +103,8 @@ If XMin <> "" Then curChartObject.Chart.Axes(xlCategory, xlPrimary).MinimumScale
 If YMin <> "" Then curChartObject.Chart.Axes(xlValue, xlPrimary).MinimumScale = CDbl(YMin)
 If XMax <> "" Then curChartObject.Chart.Axes(xlCategory, xlPrimary).MaximumScale = CDbl(XMax)
 If YMax <> "" Then curChartObject.Chart.Axes(xlValue, xlPrimary).MaximumScale = CDbl(YMax)
+If iWidth <> "" Then curChartObject.Width = CDbl(iWidth)
+If iHeight <> "" Then curChartObject.Height = CDbl(iHeight)
 If HasGridLineX <> "" Then curChartObject.Chart.Axes(xlCategory, xlPrimary).HasGridLine = True
 If HasGridLineY <> "" Then curChartObject.Chart.Axes(xlValue, xlPrimary).HasGridLine = True
 If PlotAreaLine <> "" Then
