@@ -19,6 +19,7 @@ Dim HasGridLineY
 Dim CrossAtX
 Dim CrossAtY
 Dim PlotAreaLine
+Dim SaveAsJPGFileName
 
 ' parse chart setting
 ChartSettingList = Split(sChartSetting, ";")
@@ -70,6 +71,8 @@ For Each ChartSettingListItem In ChartSettingList
         HasGridLineY = tempstr(1)
     Case "PlotAreaLine"
         PlotAreaLine = tempstr(1)
+    Case "SaveAsJPGFileName"
+        SaveAsJPGFileName = tempstr(1)
     End Select
 Next ChartSettingListItem
 
@@ -113,6 +116,15 @@ If PlotAreaLine <> "" Then
     Else
         curChartObject.Chart.PlotArea.Format.Line.ForeColor.RGB = RGB(0, 0, 0)
     End If
+End If
+If SaveAsJPGFileName <> "" Then
+    If SaveAsJPGFileName = "ChartTitle" Then
+        SaveAsJPGFileName = curChartObject.Chart.ChartTitle.Characters.Text
+    End If
+    On Error Resume Next
+        Kill ThisWorkbook.Path & "\" & SaveAsJPGFileName & ".jpg"
+    On Error GoTo 0
+    curChartObject.Chart.Export Filename:=ThisWorkbook.Path & "\" & SaveAsJPGFileName & ".jpg", FilterName:="jpg"
 End If
 
 End Function
