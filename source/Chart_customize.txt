@@ -32,8 +32,7 @@ XMax = ""
 YMax = ""
 XLabel = ""
 YLabel = ""
-iWidth = 300
-iHeight = 300
+
 For Each ChartSettingListItem In ChartSettingList
     tempstr = Split(ChartSettingListItem, ":")
     Select Case tempstr(0)
