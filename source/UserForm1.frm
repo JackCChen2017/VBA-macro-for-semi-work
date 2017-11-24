@@ -57,39 +57,78 @@ Case "Chart_customize_by_title"
 
 
 Case "Ppt_create"
-    UserForm1.LBParamList.AddItem ("aaa")
+    UserForm1.LBParamList.AddItem ("Filename")
+    UserForm1.LBParamList.AddItem ("Template")
+    UserForm1.LBParamList.AddItem ("Title")
+    UserForm1.LBParamList.AddItem ("Subtitle")
     UserForm1.TBInfo.Text = ""
     
 Case "Ppt_open"
-    UserForm1.LBParamList.AddItem ("aaa")
+    UserForm1.LBParamList.AddItem ("Filepath")
+    UserForm1.LBParamList.AddItem ("Filename")
     UserForm1.TBInfo.Text = ""
     
 Case "Ppt_close"
-    UserForm1.LBParamList.AddItem ("aaa")
+    UserForm1.LBParamList.AddItem ("Filename")
     UserForm1.TBInfo.Text = ""
     
 Case "Ppt_save"
-    UserForm1.LBParamList.AddItem ("aaa")
+    UserForm1.LBParamList.AddItem ("Filename")
+    UserForm1.TBInfo.Text = ""
+    
+Case "Ppt_saveas"
+    UserForm1.LBParamList.AddItem ("Filename")
+    UserForm1.LBParamList.AddItem ("NewFilename")
     UserForm1.TBInfo.Text = ""
     
 Case "Ppt_add_slide"
-    UserForm1.LBParamList.AddItem ("aaa")
+    UserForm1.LBParamList.AddItem ("Filename")
+    UserForm1.LBParamList.AddItem ("NewSlideCount")
+    UserForm1.LBParamList.AddItem ("NewSlideLayout")
     UserForm1.TBInfo.Text = ""
     
 Case "Ppt_slide_changetitle"
-    UserForm1.LBParamList.AddItem ("aaa")
+    UserForm1.LBParamList.AddItem ("Filename")
+    UserForm1.LBParamList.AddItem ("SlideNumber")
+    UserForm1.LBParamList.AddItem ("NewTitle")
     UserForm1.TBInfo.Text = ""
     
 Case "Ppt_import_chart"
-    UserForm1.LBParamList.AddItem ("aaa")
+    UserForm1.LBParamList.AddItem ("PptFilename")
+    UserForm1.LBParamList.AddItem ("XlsFilename")
+    UserForm1.LBParamList.AddItem ("XlsSheetname")
+    UserForm1.LBParamList.AddItem ("PptFilename")
+    UserForm1.LBParamList.AddItem ("XlsChartName")
+    UserForm1.LBParamList.AddItem ("X")
+    UserForm1.LBParamList.AddItem ("Y")
+    UserForm1.LBParamList.AddItem ("W")
+    UserForm1.LBParamList.AddItem ("H")
+    UserForm1.LBParamList.AddItem ("ChartArrange")
     UserForm1.TBInfo.Text = ""
     
 Case "Ppt_import_picture"
-    UserForm1.LBParamList.AddItem ("aaa")
+    UserForm1.LBParamList.AddItem ("PptFilename")
+    UserForm1.LBParamList.AddItem ("XlsFilename")
+    UserForm1.LBParamList.AddItem ("PicSheetname")
+    UserForm1.LBParamList.AddItem ("PptSlideNumber")
+    UserForm1.LBParamList.AddItem ("PicFolderName")
+    UserForm1.LBParamList.AddItem ("X")
+    UserForm1.LBParamList.AddItem ("Y")
+    UserForm1.LBParamList.AddItem ("W")
+    UserForm1.LBParamList.AddItem ("H")
+    UserForm1.LBParamList.AddItem ("ChartArrange")
     UserForm1.TBInfo.Text = ""
     
 Case "Ppt_import_table"
-    UserForm1.LBParamList.AddItem ("aaa")
+    UserForm1.LBParamList.AddItem ("PptFilename")
+    UserForm1.LBParamList.AddItem ("XlsFilename")
+    UserForm1.LBParamList.AddItem ("XlsSheetname")
+    UserForm1.LBParamList.AddItem ("PptSlideNumber")
+    UserForm1.LBParamList.AddItem ("XlsTableRange")
+    UserForm1.LBParamList.AddItem ("X")
+    UserForm1.LBParamList.AddItem ("Y")
+    UserForm1.LBParamList.AddItem ("W")
+    UserForm1.LBParamList.AddItem ("H")
     UserForm1.TBInfo.Text = ""
     
 Case "Data_connection_remove"
